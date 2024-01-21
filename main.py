@@ -76,9 +76,12 @@ class core():
         print('[%s]:get the screen' %(time_now))
         time.sleep(1)
 
-    def loop_get_screen(self):
+    def loop_get_screen():
         while True:
-            self.get_screen()
+            time_now = time.strftime('%H:%M:%S', time.localtime())
+            os.system(f'adb shell screencap /sdcard/screen.png')
+            print('[%s]:get the screen' %(time_now))
+            time.sleep(1)
 
     def exist(self, icon_file, conf_exist = 0.9):
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -220,7 +223,7 @@ class AutoNightWorld():
         # core.pytap(1200, 705, 0.2, 0.2)                                                  # 点击第10个单位
         # core.pytap(21, 366, 0.2, 0.2)
 
-    def fight(self):
+    def Fight(self):
         core.pytap(70, 700, 0.5, 0.5)                                  # 点击进攻 
         core.pytap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
         while core.notexist('开战倒计时', conf_exist = 0.6):                     # 判断是否寻敌完成
@@ -292,21 +295,10 @@ if __name__ == '__main__':
     n = 1
     choise = input('1.自动家乡作战\n2.自动夜世界作战\n3.退出\n')
 
-    get_screen_thread = Thread(target=core.loop_get_screen,
-                               args=(),
-                               daemon=True)
+    get_screen_thread = Thread(target=core.loop_get_screen,args=(),daemon=True)
     get_screen_thread.start()
 
-    if choise == 1:
-        while n <= 100:
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
-            AutoNightWorld.fight()
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
-            n += 1
-        get_screen_thread.a
-    elif choise == 2:
+    if int(choise) == 1:
         while n <= 100:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
@@ -314,6 +306,17 @@ if __name__ == '__main__':
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
-    elif choise == 3:
+    elif int(choise) == 2:
+        while n <= 100:
+            time_now = time.strftime('%H:%M:%S', time.localtime())
+            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
+            fight = AutoNightWorld().Fight()
+            fight()
+            time_now = time.strftime('%H:%M:%S', time.localtime())
+            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
+            n += 1
+    elif int(choise) == 3:
         print('已退出\n')
         exit()
+    else:
+        print(type(choise))
