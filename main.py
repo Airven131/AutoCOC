@@ -2,7 +2,9 @@
 import os
 import cv2
 import time
+import easyocr
 import numpy as np
+from threading import Thread
 from PIL import Image
 
 
@@ -70,13 +72,13 @@ class core():
 
     def get_screen():
         time_now = time.strftime('%H:%M:%S', time.localtime())
-
         os.system(f'adb shell screencap /sdcard/screen.png')
-        # time.sleep(3)
-        # os.system(f'adb pull /sdcard/screen.png screen.png')
-
         print('[%s]:get the screen' %(time_now))
         time.sleep(1)
+
+    def loop_get_screen(self):
+        while True:
+            self.get_screen()
 
     def exist(self, icon_file, conf_exist = 0.9):
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -156,6 +158,22 @@ class core():
     #             image[i][j][1] = image_rgb[i][j][1] * g
     #             image[i][j][2] = image_rgb[i][j][2] * b
     #     return image
+        
+    def get_resource(self):
+        path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
+
+        result = []
+        reader = easyocr.Reader(['en'])
+        resule_all = reader.readtext(path, paragraph="False")
+        n = 0
+        for n in resule_all:
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[0] = resule_all[n][1]
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[1] = resule_all[n][1]
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[2] = resule_all[n][1]
+
 
 class AutoNightWorld():
     def xiabin(self):
@@ -203,24 +221,23 @@ class AutoNightWorld():
         # core.pytap(21, 366, 0.2, 0.2)
 
     def fight(self):
-        core.get_screen()
         core.pytap(70, 700, 0.5, 0.5)                                  # 点击进攻 
         core.pytap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
         while core.notexist('开战倒计时', conf_exist = 0.6):                     # 判断是否寻敌完成
-            core.get_screen()
+            time.sleep(1)
         self.xiabin()
         not_defeat_night_world_2 = True
         while core.exist('距离战斗结束还有', conf_exist = 0.6):  #下兵完成，循环判断是否进入结束战斗
-            core.get_screen()
+            time.sleep(1)
         while core.notexist('回营'):
-            core.get_screen()         #结束战斗，循环判断是否进入二阶段还是战斗
+            time.sleep(1)         #结束战斗，循环判断是否进入二阶段还是战斗
             if not_defeat_night_world_2:
-                if core.exist('开战倒计时', conf_exist = 0.6):  #通过判断奥仔岗哨按钮是否存在来判断是否进入二阶段
+                if core.exist('开战倒计时', conf_exist = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
                     not_defeat_night_world_2 = False
         core.pytap(645, 645) #点击回营
         while core.notexist('移动', conf_exist = 0.8):
-            core.get_screen()
+            time.sleep(1)
             if core.exist('确定', conf_exist = 0.7):   # 用于判断是否有胜利之星奖励
                 core.pytap(600, 600, 2, 3)                                  # 判断是否回城完成
         core.pyswipe(976, 500, 976, 700, 500)
@@ -264,19 +281,22 @@ class AutoHomeTown():
         core.pyswipe(0, 0, 0.5, 0.5)
 
     def fight(self):
-        core.get_screen()
         while core.notexist('移动'):
             core.get_screen()
         core.pytap(70, 700, 0.5, 0.5)
         core.pytap(917, 493, 0.5, 0.5)
-        while core.notexist('结束战斗'):
+        while core.exist('结束战斗'):
             core.get_screen()
-
-
 
 if __name__ == '__main__':
     n = 1
-    choise = input('1.自动家乡作战\n2.自动夜世界作战\n')
+    choise = input('1.自动家乡作战\n2.自动夜世界作战\n3.退出\n')
+
+    get_screen_thread = Thread(target=core.loop_get_screen,
+                               args=(),
+                               daemon=True)
+    get_screen_thread.start
+
     if choise == 1:
         while n <= 100:
             time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -285,6 +305,7 @@ if __name__ == '__main__':
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
+        get_screen_thread.a
     elif choise == 2:
         while n <= 100:
             time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -293,3 +314,6 @@ if __name__ == '__main__':
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
+    elif choise == 3:
+        print('已退出\n')
+        exit()
