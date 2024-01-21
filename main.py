@@ -295,7 +295,7 @@ if __name__ == '__main__':
     get_screen_thread = Thread(target=core.loop_get_screen,
                                args=(),
                                daemon=True)
-    get_screen_thread.start
+    get_screen_thread.start()
 
     if choise == 1:
         while n <= 100:
