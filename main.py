@@ -2,7 +2,6 @@
 import os
 import cv2
 import time
-import easyocr
 import numpy as np
 from threading import Thread
 from PIL import Image
@@ -32,14 +31,14 @@ class Core():
 
     def GetIconPosition(self, icon_name = None, conf = 0.9):
         # time_now = time.strftime('%H:%M:%S', time.localtime())
-        if icon_name is None:
-            icon_name = self._icon_name
+        # if icon_name is None:
+        #     icon_name = self._icon_name
         # 读取图片和图标的灰度图
-        icon = cv2.imread('icon/' + con_name + '.png', cv2.IMREAD_GRAYSCALE)
+        icon = cv2.imread('icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
         image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
 
         #图片裁切，只选取左上角1265*772的有效区域
-        image = image[0:772, 0:1265].copy()
+        image = image[0:772, 0:1265]
 
         # 匹配图片和图标
         resule = cv2.matchTemplate(image, icon, cv2.TM_CCOEFF_NORMED)
@@ -54,30 +53,6 @@ class Core():
 
         return Position(x, y)
 
-    def GetIconPosition_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
-        time_now = time.strftime('%H:%M:%S', time.localtime())
-
-        # 读取图片和图标的灰度图
-        icon = cv2.imread('icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
-        image = cv2.imread('/home/airven/.zhuoyi/common-{6c0bd68b-7b82-44c0-bf59-d0f2eb43e5be}-12/移动x数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
-
-        #图片裁切，只选取左上角1265*772的有效区域
-        image = image[0:772, 0:1265].copy()
-
-        # 匹配图片和图标
-        resule = cv2.matchTemplate(image, icon, cv2.TM_CCOEFF_NORMED)
-        _, _, min_loc, max_loc = cv2.minMaxLoc(resule)
-
-        # 丢弃掉匹配值较低的pisition
-        if _ < conf:
-            return Position(-1, -1)
-        
-        # 获取图标左上角的坐标
-        x, y = max_loc
-
-        return Position(x, y)
 
     def GetScreen():
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -105,38 +80,12 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return True
         
-    def Exist_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
-        time_now = time.strftime('%H:%M:%S', time.localtime())
-        x = self.GetIconPosition_ma(icon_name, conf).x
-        y = self.GetIconPosition_ma(icon_name, conf).y
-        if x == -1 :
-            print('[%s]:The icon %s is not exist' %(time_now, icon_name))
-            return False
-        else:
-            print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
-            return True
-        
     def NotExist(self, icon_name = None, conf = 0.9):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        x = self.GetIconPosition_ma(icon_name, conf).x
-        y = self.GetIconPosition_ma(icon_name, conf).y
-        if x == -1 :
-            print('[%s]:The icon %s is not exist' %(time_now, icon_name))
-            return True
-        else:
-            print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
-            return False
-        
-    def NotExist_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
-        time_now = time.strftime('%H:%M:%S', time.localtime())
-        x = self.GetIconPosition_ma(icon_name, conf).x
-        y = self.GetIconPosition_ma(icon_name, conf).y
+        x = self.GetIconPosition(icon_name, conf).x
+        y = self.GetIconPosition(icon_name, conf).y
         if x == -1 :
             print('[%s]:The icon %s is not exist' %(time_now, icon_name))
             return True
@@ -179,20 +128,20 @@ class Core():
     #             image[i][j][2] = image_rgb[i][j][2] * b
     #     return image
         
-    def GetResource(self):
-        path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
+    # def GetResource(self):
+    #     path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
 
-        result = []
-        reader = easyocr.Reader(['en'])
-        resule_all = reader.readtext(path, paragraph="False")
-        n = 0
-        for n in resule_all:
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[0] = resule_all[n][1]
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[1] = resule_all[n][1]
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[2] = resule_all[n][1]
+    #     result = []
+    #     reader = easyocr.Reader(['en'])
+    #     resule_all = reader.readtext(path, paragraph="False")
+    #     n = 0
+    #     for n in resule_all:
+    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+    #             result[0] = resule_all[n][1]
+    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+    #             result[1] = resule_all[n][1]
+    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+    #             result[2] = resule_all[n][1]
 
 
 class AutoNightWorld():
@@ -241,23 +190,24 @@ class AutoNightWorld():
         # Core.PyTap(21, 366, 0.2, 0.2)
 
     def Fight(self):
+        Core.GetScreen()
         Core().PyTap(70, 700, 0.5, 0.5)                                  # 点击进攻 
         Core().PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
         while Core().NotExist(icon_name = '开战倒计时', conf = 0.6):                     # 判断是否寻敌完成
-            time.sleep(1)
+            Core.GetScreen()
         self.xiabin()
-        not_defeat_night_world_2 = True
+        nhnw2 = True
         while Core().Exist(icon_name = '距离战斗结束还有', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
-            time.sleep(1)
+            Core.GetScreen()
         while Core().NotExist(icon_name = '回营'):
-            time.sleep(1)         #结束战斗，循环判断是否进入二阶段还是战斗
-            if not_defeat_night_world_2:
+            Core.GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
+            if nhnw2:
                 if Core().Exist(icon_name = '开战倒计时', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
-                    not_defeat_night_world_2 = False
+                    nhnw2 = False
         Core().PyTap(645, 645) #点击回营
         while Core().NotExist(icon_name = '移动', conf = 0.8):
-            time.sleep(1)
+            Core.GetScreen()
             if Core().Exist(icon_name = '确定', conf = 0.7):   # 用于判断是否有胜利之星奖励
                 Core().PyTap(600, 600, 2, 3)                                  # 判断是否回城完成
         Core().PySwipe(976, 500, 976, 700, 500)
@@ -310,13 +260,16 @@ class AutoHomeTown():
 
 if __name__ == '__main__':
     n = 1
+    N = 100
     choise = input('1.自动家乡作战\n2.自动夜世界作战\n3.退出\n')
+    N = input('请输入循环次数(default = 100)')
+    N = int(N)
 
-    get_screen_thread = Thread(target=Core.LoopGetScreen,args=(),daemon=True)
-    get_screen_thread.start()
+    # get_screen_thread = Thread(target=Core.LoopGetScreen,args=(),daemon=True)
+    # get_screen_thread.start()
 
     if choise == '1':
-        while n <= 100:
+        while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
             AutoHomeTown.fight()
@@ -324,11 +277,10 @@ if __name__ == '__main__':
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
     elif choise == '2':
-        while n <= 100:
-            fight = AutoNightWorld().Fight()
+        while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
-            fight()
+            AutoNightWorld().Fight()
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
