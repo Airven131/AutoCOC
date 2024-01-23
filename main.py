@@ -34,7 +34,7 @@ class Core():
         # if icon_name is None:
         #     icon_name = self._icon_name
         # 读取图片和图标的灰度图
-        icon = cv2.imread('icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
+        icon = cv2.imread('/home/airven/Code/AutoCOC/icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
         image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
 
         #图片裁切，只选取左上角1265*772的有效区域
