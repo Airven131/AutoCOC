@@ -15,27 +15,27 @@ class Position:
         self.y = int(y)
 
 class Core():
-    def __init__(self,icon_name = None, image_name = None, conf = 0.9):
+    def __init__(icon_name = None, image_name = None, conf = 0.9):
         self._icon_name = icon_name
         self._image_name = image_name
         self._conf = conf
         pass
 
-    def ImageCut(self, image_full):
+    def ImageCut(image_full):
         image = image_full[0:772, 0:1265].copy()
         return image
 
         #图片裁切，只选取左上角1265*772的有效区域        
-    def ImageCut_ma(self, image_full):
+    def ImageCut_ma(image_full):
         image = image_full[0:950, 0:1520].copy()
         return image
 
-    def GetIconPosition(self, icon_name = None, conf = 0.9):
+    def GetIconPosition(icon_name = None, conf = 0.9):
         # time_now = time.strftime('%H:%M:%S', time.localtime())
         if icon_name is None:
             icon_name = self._icon_name
         # 读取图片和图标的灰度图
-        icon = cv2.imread('icon/' + con_name + '.png', cv2.IMREAD_GRAYSCALE)
+        icon = cv2.imread('icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
         image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
 
         #图片裁切，只选取左上角1265*772的有效区域
@@ -54,9 +54,9 @@ class Core():
 
         return Position(x, y)
 
-    def GetIconPosition_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
+    def GetIconPosition_ma(icon_name = None, conf = 0.9):
+        # if icon_name is None:
+        #     icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
 
         # 读取图片和图标的灰度图
@@ -92,9 +92,9 @@ class Core():
             print('[%s]:get the screen' %(time_now))
             time.sleep(1)
 
-    def Exist(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
+    def Exist(icon_name = None, conf = 0.9):
+    #     if icon_name is None:
+    #         icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
         x = self.GetIconPosition(icon_name, conf).x
         y = self.GetIconPosition(icon_name, conf).y
@@ -105,9 +105,9 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return True
         
-    def Exist_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
+    def Exist_ma(icon_name = None, conf = 0.9):
+    #     if icon_name is None:
+    #         icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
         x = self.GetIconPosition_ma(icon_name, conf).x
         y = self.GetIconPosition_ma(icon_name, conf).y
@@ -118,9 +118,9 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return True
         
-    def NotExist(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
+    def NotExist(icon_name = None, conf = 0.9):
+        # if icon_name is None:
+        #     icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
         x = self.GetIconPosition_ma(icon_name, conf).x
         y = self.GetIconPosition_ma(icon_name, conf).y
@@ -131,9 +131,9 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return False
         
-    def NotExist_ma(self, icon_name = None, conf = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
+    def NotExist_ma(icon_name = None, conf = 0.9):
+        # if icon_name is None:
+        #     icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
         x = self.GetIconPosition_ma(icon_name, conf).x
         y = self.GetIconPosition_ma(icon_name, conf).y
@@ -144,14 +144,14 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return False
 
-    def PyTap(self, x, y, before_time = 2.0, after_time = 2.0):
+    def PyTap(x, y, before_time = 2.0, after_time = 2.0):
         time.sleep(before_time)
         time_now = time.strftime('%H:%M:%S', time.localtime())
         os.system('adb shell input tap %d %d' %(x, y))
         print('[%s]:Successful tap %d %d' %(time_now, x, y))
         time.sleep(after_time)
 
-    def PySwipe(self, from_x, from_y, to_x, to_y, way_time):
+    def PySwipe(from_x, from_y, to_x, to_y, way_time):
         time_now = time.strftime('%H:%M:%S', time.localtime())
         # if time is None:
         #     length = sqrt(pow(from_x - to_x), 2) + pow((from_y - to_y),2)
@@ -298,14 +298,15 @@ class AutoNightWorld():
 
 class AutoHomeTown():
     def xiabin():
-        Core.PySwipe(0, 0, 0.5, 0.5)
+        Core.PyTap(0, 0, 0.5, 0.5)
+        
 
-    def fight(self):
-        while Core.notexist('移动'):
+    def Fight(self):
+        while Core.NotExist('移动'):
             Core.GetScreen()
         Core.PyTap(70, 700, 0.5, 0.5)
         Core.PyTap(917, 493, 0.5, 0.5)
-        while Core.exist('结束战斗'):
+        while Core.Exist('结束战斗'):
             Core.GetScreen()
 
 if __name__ == '__main__':
