@@ -92,7 +92,7 @@ class Core():
             print('[%s]:get the screen' %(time_now))
             time.sleep(1)
 
-    def Exist(icon_name = None, conf = 0.9):
+    def Exist(self, icon_name = None, conf = 0.9):
     #     if icon_name is None:
     #         icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -105,7 +105,7 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return True
         
-    def Exist_ma(icon_name = None, conf = 0.9):
+    def Exist_ma(self, icon_name = None, conf = 0.9):
     #     if icon_name is None:
     #         icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -118,7 +118,7 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return True
         
-    def NotExist(icon_name = None, conf = 0.9):
+    def NotExist(self, icon_name = None, conf = 0.9):
         # if icon_name is None:
         #     icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -131,7 +131,7 @@ class Core():
             print('[%s]:Successful to find the icon at %s %d %d' %(time_now, icon_name, x, y))
             return False
         
-    def NotExist_ma(icon_name = None, conf = 0.9):
+    def NotExist_ma(self, icon_name = None, conf = 0.9):
         # if icon_name is None:
         #     icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
