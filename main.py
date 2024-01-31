@@ -88,7 +88,7 @@ class Core():
             print('[%d][%s]:成功在%d %d发现%s' %(self.times, time_now, x, y, icon_name))
             return False
 
-    def PyTap(self, x, y, before_time = 2.0, after_time = 2.0):
+    def PyTap(self, x = 0, y = 0, before_time = 2.0, after_time = 2.0):
         time.sleep(before_time)
         time_now = time.strftime('%H:%M:%S', time.localtime())
         os.system('adb shell input tap %d %d' %(x, y))
@@ -146,40 +146,62 @@ class AutoNightWorld():
         self.times = times
 
     def xiabin(self):
-        print(Core(times = self.times).PyTap(180, 705, 0.05, 0.05))                                         # 点击第1个单位
-        print(Core(times = self.times).PyTap(21, 366, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(290, 705, 0.05, 0.05), end = '\r')                                      # 点击第2个单位
-        print(Core(times = self.times).PyTap(109, 275, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(370, 705, 0.05, 0.05), end = '\r')                                         # 点击第3个单位
-        print(Core(times = self.times).PyTap(365, 87, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(460, 705, 0.05, 0.05), end = '\r')                                         # 点击第4个单位
-        print(Core(times = self.times).PyTap(843, 56, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(550, 705, 0.05, 0.05), end = '\r')                                         # 点击第5个单位
-        print(Core(times = self.times).PyTap(1110, 250, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(640, 705, 0.05, 0.05), end = '\r')                                         # 点击第6个单位
-        print(Core(times = self.times).PyTap(1173, 450, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(730, 705, 0.05, 0.05), end = '\r')                                         # 点击第7个单位
-        print(Core(times = self.times).PyTap(1000, 610, 0.05, 0.05), end = '\r')
-        print(Core(times = self.times).PyTap(820, 705, 0.05, 0.05), end = '\r')                                         # 点击第8个单位
-        print(Core(times = self.times).PyTap(310, 610, 0.05, 0.05), end = '\r')
+        print('[%d][%s]:开始下兵' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        Core(times = self.times).PyTap(180, 705, 0.05, 0.05)                                         # 点击第1个单位
+        Core(times = self.times).PyTap(21, 366, 0.05, 0.05)
+        Core(times = self.times).PyTap(290, 705, 0.05, 0.05)                                      # 点击第2个单位
+        Core(times = self.times).PyTap(109, 275, 0.05, 0.05)
+        Core(times = self.times).PyTap(370, 705, 0.05, 0.05)                                         # 点击第3个单位
+        Core(times = self.times).PyTap(365, 87, 0.05, 0.05)
+        Core(times = self.times).PyTap(460, 705, 0.05, 0.05)                                         # 点击第4个单位
+        Core(times = self.times).PyTap(843, 56, 0.05, 0.05)
+        Core(times = self.times).PyTap(550, 705, 0.05, 0.05)                                         # 点击第5个单位
+        Core(times = self.times).PyTap(1110, 250, 0.05, 0.05)
+        Core(times = self.times).PyTap(640, 705, 0.05, 0.05)                                         # 点击第6个单位
+        Core(times = self.times).PyTap(1173, 450, 0.05, 0.05)
+        Core(times = self.times).PyTap(730, 705, 0.05, 0.05)                                         # 点击第7个单位
+        Core(times = self.times).PyTap(1000, 610, 0.05, 0.05)
+        Core(times = self.times).PyTap(820, 705, 0.05, 0.05)                                         # 点击第8个单位
+        Core(times = self.times).PyTap(310, 610, 0.05, 0.05)
         # Core.PyTap(910, 705)                                       # 点击第9个单位
         # Core.PyTap(263, 573)
         # Core.PyTap(1000, 705)                                      # 点击第10个单位
         # Core.PyTap(21, 366)
+        print('[%d][%s]:下兵完成' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
 
     def Fight(self):
         print(Core(times = self.times).GetScreen())
         Core(times = self.times).PyTap(70, 700, 0.5, 0.5)
         print('[%d][%s]:成功在 70 700 点击进攻图标' %(self.times, time.strftime('%H:%M:%S', time.localtime())))                                  # 点击进攻 
         Core(times = self.times).PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
-        print('[%d][%s]:成功在 976 500 点击立即寻找图标' %(self.times, time.strftime('%H:%M:%S', time.localtime()))) 
+        print('[%d][%s]:成功在 976 500 点击立即寻找图标\n' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        over_time = 0
         while Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6)[0] is not True:                     # 判断是否寻敌完成
-            Core(times = self.times).GetScreen()
+            print('\033[F' + Core(times = self.times).GetScreen())
+            print('\r[%d][%s]:搜寻目标中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:搜寻目标中………  ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:搜寻目标中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            over_time += 1
+            if over_time > 20:
+                print('[%d][%s]:卡云了，重新开始！' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+                self.Fight()
+        print('[%d][%s]:寻敌完成！' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         self.xiabin()
         nhnw2 = True
-        while Core(times = self.times).Exist(icon_name = '距离战斗结束还有', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
-            Core(times = self.times).GetScreen()
-        while Core(times = self.times).NotExist(icon_name = '回营'):
+        print('')
+        while Core(times = self.times).Exist(icon_name = '距离战斗结束还有', conf = 0.6)[0]:                             #下兵完成，循环判断是否进入结束战斗
+            print('\033[F' + Core(times = self.times).GetScreen())
+            print('\r[%d][%s]:战斗中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:战斗中………  ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:战斗中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+        print('')
+        while Core(times = self.times).Exist(icon_name = '回营')[0] is not True:
             Core(times = self.times).GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
             if nhnw2:
                 if Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6):  #判断是否存在来判断是否进入二阶段
