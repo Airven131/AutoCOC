@@ -3,7 +3,7 @@ import os
 import cv2
 import time
 # import numpy as np
-# from threading import Thread
+from threading import Thread
 # from PIL import Image
 
 
@@ -172,11 +172,14 @@ class AutoNightWorld():
     def Fight(self):
         print(Core(times = self.times).GetScreen())
         Core(times = self.times).PyTap(70, 700, 0.5, 0.5)
-        print('[%d][%s]:成功在 70 700 点击进攻图标' %(self.times, time.strftime('%H:%M:%S', time.localtime())))                                  # 点击进攻 
+        print('[%d][%s]:成功在 70 700 点击进攻图标' %(self.times, time.strftime('%H:%M:%S', time.localtime())))# 点击进攻 
         Core(times = self.times).PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
         print('[%d][%s]:成功在 976 500 点击立即寻找图标\n' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+
+        # 判断是否寻敌完成
         over_time = 0
-        while Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6)[0] is not True:                     # 判断是否寻敌完成
+        print('')
+        while Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6)[0] is not True:
             print('\033[F' + Core(times = self.times).GetScreen())
             print('\r[%d][%s]:搜寻目标中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
             time.sleep(0.5)
@@ -184,15 +187,19 @@ class AutoNightWorld():
             time.sleep(0.5)
             print('\r[%d][%s]:搜寻目标中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
             time.sleep(0.5)
+            # 如果寻敌过久，则自动放弃并重新开始寻敌
             over_time += 1
             if over_time > 20:
                 print('[%d][%s]:卡云了，重新开始！' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+                Core(times = self.times).PyTap()  #点击取消寻敌
                 self.Fight()
         print('[%d][%s]:寻敌完成！' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         self.xiabin()
+
         nhnw2 = True
         print('')
-        while Core(times = self.times).Exist(icon_name = '距离战斗结束还有', conf = 0.6)[0]:                             #下兵完成，循环判断是否进入结束战斗
+        #下兵完成，循环判断是否进入结束战斗
+        while Core(times = self.times).Exist(icon_name = '距离战斗结束还有', conf = 0.6)[0]:
             print('\033[F' + Core(times = self.times).GetScreen())
             print('\r[%d][%s]:战斗中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
             time.sleep(0.5)
@@ -200,22 +207,52 @@ class AutoNightWorld():
             time.sleep(0.5)
             print('\r[%d][%s]:战斗中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
             time.sleep(0.5)
+
         print('')
+        #结束战斗，循环判断是否进入二阶段还是战斗
         while Core(times = self.times).Exist(icon_name = '回营')[0] is not True:
-            Core(times = self.times).GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
+            print('\033[F' + Core(times = self.times).GetScreen())
+            #如果没有在第二部分战斗过，则进入二阶段，并且循环判断过场动画是否完成
             if nhnw2:
                 if Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
                     nhnw2 = False
+            # 如果已经进攻了第二部分，则输出战斗中
+            else:
+                print('\r[%d][%s]:战斗中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+                time.sleep(0.5)
+                print('\r[%d][%s]:战斗中………  ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+                time.sleep(0.5)
+                print('\r[%d][%s]:战斗中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+                time.sleep(0.5)
         Core(times = self.times).PyTap(645, 645) #点击回营
+        print('[%d][%s]:点击回营' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+
+        # 循环判断是否回营完成
+        print('')
         while Core(times = self.times).NotExist(icon_name = '移动', conf = 0.8):
-            Core(times = self.times).GetScreen()
-            if Core(times = self.times).Exist(icon_name = '确定', conf = 0.7):   # 用于判断是否有胜利之星奖励
-                Core(times = self.times).PyTap(600, 600, 2, 3)                                  # 判断是否回城完成
-        Core(times = self.times).PySwipe(976, 500, 976, 700, 500)
-        Core(times = self.times).PyTap(926, 108, 0.2, 0.2) #点击圣水车
-        Core(times = self.times).PyTap(965, 655, 0.1, 0.1) 
+            print('\033[F' + Core(times = self.times).GetScreen())
+            print('\r[%d][%s]:回营中…    ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:回营中………  ' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            print('\r[%d][%s]:回营中……………' %(self.times, time.strftime('%H:%M:%S', time.localtime())), end = '')
+            time.sleep(0.5)
+            # 用于判断是否有胜利之星奖励
+            if Core(times = self.times).Exist(icon_name = '确定', conf = 0.6):
+                Core(times = self.times).PyTap(600, 600, 2, 3)
+                time_now = time.strftime('%H:%M:%S', time.localtime())
+                print('\033[F[%d][%s]:已回营\n[%d][%s]:已收集胜利之星奖励' %(self.times, time_now, self.times, time_now))
+            else:
+                print('[%d][%s]:已回营' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        print(Core(times = self.times).PySwipe(976, 500, 976, 700, 500))
+        Core(times = self.times).PyTap(926, 108, 0.2, 0.2)
+        print('[%d][%s]:点击圣水车' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        Core(times = self.times).PyTap(965, 655, 0.1, 0.1)
+        print('[%d][%s]:收集圣水' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         Core(times = self.times).PyTap(1110, 75, 0.1, 0.1)
+        print('[%d][%s]:关闭' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        
 
 
 # class AutoHomeTown():
@@ -242,6 +279,8 @@ if __name__ == '__main__':
     # get_screen_thread = Thread(target=Core.LoopGetScreen,args=(),daemon=True)
     # get_screen_thread.start()
 
+    
+
     if choise == '1':
         while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -255,6 +294,8 @@ if __name__ == '__main__':
         while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
+            fight_thread = Thread(target=AutoNightWorld.Fight, args=(n,), daemon=False)
+            fight_thread.start()
             AutoNightWorld(n).Fight()
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
@@ -262,5 +303,4 @@ if __name__ == '__main__':
     elif choise == '3':
         print('已退出\n')
         exit()
-    else:
-        print(type(n))
+        
