@@ -1,11 +1,11 @@
-# from Core import *
 import os
 import cv2
 import time
-# import numpy as np
-# from threading import Thread
-# from PIL import Image
+import numpy as np
+from ppadb.client import Client as AdbClient
 
+client = AdbClient(host = "127.0.0.1", port = 5037)
+device = client.device("emulator-5554")
 
 
 class Position:
@@ -16,30 +16,22 @@ class Position:
 class Core():
     def __init__(self, times = 0, icon_name = None, image_name = None, conf = 0.9):
         self.times = times
-        self._icon_name = icon_name
-        self._image_name = image_name
-        self._conf = conf
+        self.icon_name = icon_name
+        self.image_name = image_name
+        self.conf = conf
         pass
 
     def ImageCut(self, image_full):
         image = image_full[0:772, 0:1265].copy()
         return image
 
-        #图片裁切，只选取左上角1265*772的有效区域        
-    def ImageCut_ma(self, image_full):
-        image = image_full[0:950, 0:1520].copy()
-        return image
-
     def GetIconPosition(self, icon_name = None, conf = 0.9):
-        # time_now = time.strftime('%H:%M:%S', time.localtime())
-        # if icon_name is None:
-        #     icon_name = self._icon_name
-        # 读取图片和图标的灰度图
-        icon = cv2.imread('/home/airven/Code/AutoCOC/icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
-        image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
+        icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
+        # image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
+        image = self.GetScreen()
 
         #图片裁切，只选取左上角1265*772的有效区域
-        image = image[0:772, 0:1265]
+        # image = image[0:772, 0:1265]
 
         # 匹配图片和图标
         resule = cv2.matchTemplate(image, icon, cv2.TM_CCOEFF_NORMED)
@@ -57,16 +49,18 @@ class Core():
 
     def GetScreen(self):
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        os.system(f'adb shell screencap /sdcard/screen.png')
+        result = device.screencap()
         print('[%d][%s]:get the screen' %(self.times, time_now))
         time.sleep(1)
+        return result
 
     def LoopGetScreen():
         while True:
             time_now = time.strftime('%H:%M:%S', time.localtime())
-            os.system(f'adb shell screencap /sdcard/screen.png')
+            result = device.screencap()
             print('[%s]:get the screen' %(time_now))
             time.sleep(1)
+            return result
 
     def Exist(self, icon_name = None, conf = 0.9):
         if icon_name is None:
@@ -97,53 +91,51 @@ class Core():
     def PyTap(self, x, y, before_time = 2.0, after_time = 2.0):
         time.sleep(before_time)
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        os.system('adb shell input tap %d %d' %(x, y))
+        # os.system('adb shell input tap %d %d' %(x, y))
+        device.shell('input tap %d %d' %(x, y))
         print('[%d][%s]:Successful tap %d %d' %(self.times, time_now, x, y))
         time.sleep(after_time)
 
     def PySwipe(self, from_x, from_y, to_x, to_y, way_time):
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        # if time is None:
-        #     length = sqrt(pow(from_x - to_x), 2) + pow((from_y - to_y),2)
-        #     speed = randint(1500, 2000)
-        #     time = length/speed*1000
-        os.system('adb shell input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
+        # os.system('adb shell input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
+        device.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
+"""'''
+    def icontap(icon_file):
+        icon_position = GetIconPosition(icon_name = icon_file)
+        h, w =  cv2.imread('icon/' + icon_file + '.png', cv2.IMREAD_GRAYSCALE)
+        x = icon_position.x
+        y = icon_position.y
+        os.system('adb shell input tap %d %d' %(x, y))
 
-    # def icontap(icon_file):
-    #     icon_position = GetIconPosition(icon_name = icon_file)
-    #     h, w =  cv2.imread('icon/' + icon_file + '.png', cv2.IMREAD_GRAYSCALE)
-    #     x = icon_position.x
-    #     y = icon_position.y
-    #     os.system('adb shell input tap %d %d' %(x, y))
-
-    #色彩转换
-    # def trans_color(image_rgb, r, g, b):
-    #     i = 0
-    #     j = 0
-    #     image = [[[]]]
-    #     while i <= 1265:
-    #         while j <= 772:
-    #             image[i][j][0] = image_rgb[i][j][0] * r
-    #             image[i][j][1] = image_rgb[i][j][1] * g
-    #             image[i][j][2] = image_rgb[i][j][2] * b
-    #     return image
+    色彩转换
+    def trans_color(image_rgb, r, g, b):
+        i = 0
+        j = 0
+        image = [[[]]]
+        while i <= 1265:
+            while j <= 772:
+                image[i][j][0] = image_rgb[i][j][0] * r
+                image[i][j][1] = image_rgb[i][j][1] * g
+                image[i][j][2] = image_rgb[i][j][2] * b
+        return image
         
-    # def GetResource(self):
-    #     path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
+    def GetResource(self):
+        path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
 
-    #     result = []
-    #     reader = easyocr.Reader(['en'])
-    #     resule_all = reader.readtext(path, paragraph="False")
-    #     n = 0
-    #     for n in resule_all:
-    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-    #             result[0] = resule_all[n][1]
-    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-    #             result[1] = resule_all[n][1]
-    #         if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-    #             result[2] = resule_all[n][1]
-
+        result = []
+        reader = easyocr.Reader(['en'])
+        resule_all = reader.readtext(path, paragraph="False")
+        n = 0
+        for n in resule_all:
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[0] = resule_all[n][1]
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[1] = resule_all[n][1]
+            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
+                result[2] = resule_all[n][1]
+'''"""
 
 class AutoNightWorld():
     def __init__(self, times = 0):
@@ -175,22 +167,22 @@ class AutoNightWorld():
         Core(times = self.times).GetScreen()
         Core(times = self.times).PyTap(70, 700, 0.5, 0.5)                                  # 点击进攻 
         Core(times = self.times).PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
-        while Core(times = self.times).NotExist(icon_name = '开战倒计时', conf = 0.6):                     # 判断是否寻敌完成
+        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):                     # 判断是否寻敌完成
             Core(times = self.times).GetScreen()
         self.xiabin()
         nhnw2 = True
-        while Core(times = self.times).Exist(icon_name = '距离战斗结束还有', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
+        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
             Core(times = self.times).GetScreen()
-        while Core(times = self.times).NotExist(icon_name = '回营'):
+        while Core(times = self.times).NotExist(icon_name = 'back_home'):
             Core(times = self.times).GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
             if nhnw2:
-                if Core(times = self.times).Exist(icon_name = '开战倒计时', conf = 0.6):  #判断是否存在来判断是否进入二阶段
+                if Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
                     nhnw2 = False
         Core(times = self.times).PyTap(645, 645) #点击回营
-        while Core(times = self.times).NotExist(icon_name = '移动', conf = 0.8):
+        while Core(times = self.times).NotExist(icon_name = 'move', conf = 0.8):
             Core(times = self.times).GetScreen()
-            if Core(times = self.times).Exist(icon_name = '确定', conf = 0.7):   # 用于判断是否有胜利之星奖励
+            if Core(times = self.times).Exist(icon_name = 'confirm', conf = 0.7):   # 用于判断是否有胜利之星奖励
                 Core(times = self.times).PyTap(600, 600, 2, 3)                                  # 判断是否回城完成
         Core(times = self.times).PySwipe(976, 500, 976, 700, 500)
         Core(times = self.times).PyTap(926, 108, 0.2, 0.2) #点击圣水车
