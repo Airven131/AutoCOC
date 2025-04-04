@@ -4,8 +4,9 @@ import time
 import numpy as np
 from ppadb.client import Client as AdbClient
 
-client = AdbClient(host = "127.0.0.1", port = 5037)
-device = client.device("emulator-5554")
+client = AdbClient(host="127.0.0.1", port = 5037)
+client.remote_connect(host="127.0.0.1", port=5555)
+device = client.device("127.0.0.1:5555")
 
 
 class Position:
@@ -21,24 +22,19 @@ class Core():
         self.conf = conf
         pass
 
-    def ImageCut(self, image_full):
-        image = image_full[0:772, 0:1265].copy()
-        return image
 
     def GetIconPosition(self, icon_name = None, conf = 0.9):
-        icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_GRAYSCALE)
-        # image = cv2.imread('/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png', cv2.IMREAD_GRAYSCALE)
+        icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_COLOR)
         image = self.GetScreen()
-
-        #图片裁切，只选取左上角1265*772的有效区域
-        # image = image[0:772, 0:1265]
+        icon_gray = cv2.cvtColor(icon, cv2.COLOR_BGR2GRAY)
+        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # 匹配图片和图标
-        resule = cv2.matchTemplate(image, icon, cv2.TM_CCOEFF_NORMED)
-        _, _, min_loc, max_loc = cv2.minMaxLoc(resule)
+        resule = cv2.matchTemplate(image_gray, icon_gray, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(resule)
 
         # 丢弃掉匹配值较低的pisition
-        if _ < conf:
+        if max_val < conf:
             return Position(-1, -1)
         
         # 获取图标左上角的坐标
@@ -49,25 +45,22 @@ class Core():
 
     def GetScreen(self):
         time_now = time.strftime('%H:%M:%S', time.localtime())
+
         result = device.screencap()
+        resule_trans = np.frombuffer(result, np.uint8)
+        image = cv2.imdecode(resule_trans, cv2.IMREAD_COLOR)
+
         print('[%d][%s]:get the screen' %(self.times, time_now))
         time.sleep(1)
-        return result
-
-    def LoopGetScreen():
-        while True:
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            result = device.screencap()
-            print('[%s]:get the screen' %(time_now))
-            time.sleep(1)
-            return result
+        return image
 
     def Exist(self, icon_name = None, conf = 0.9):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        x = self.GetIconPosition(icon_name, conf).x
-        y = self.GetIconPosition(icon_name, conf).y
+        pos = self.GetIconPosition(icon_name, conf)
+        x = pos.x
+        y = pos.y
         if x == -1 :
             print('[%d][%s]:The icon %s is not exist' %(self.times, time_now, icon_name))
             return False
@@ -75,12 +68,13 @@ class Core():
             print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time_now, icon_name, x, y))
             return True
         
-    def NotExist(self, icon_name = None, conf = 0.9):
+    def NotExist(self, icon_name = None, conf = None):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        x = self.GetIconPosition(icon_name, conf).x
-        y = self.GetIconPosition(icon_name, conf).y
+        pos = self.GetIconPosition(icon_name, conf)
+        x = pos.x
+        y = pos.y
         if x == -1 :
             print('[%d][%s]:The icon %s is not exist' %(self.times, time_now, icon_name))
             return True
@@ -101,41 +95,8 @@ class Core():
         # os.system('adb shell input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         device.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
-"""'''
-    def icontap(icon_file):
-        icon_position = GetIconPosition(icon_name = icon_file)
-        h, w =  cv2.imread('icon/' + icon_file + '.png', cv2.IMREAD_GRAYSCALE)
-        x = icon_position.x
-        y = icon_position.y
-        os.system('adb shell input tap %d %d' %(x, y))
 
-    色彩转换
-    def trans_color(image_rgb, r, g, b):
-        i = 0
-        j = 0
-        image = [[[]]]
-        while i <= 1265:
-            while j <= 772:
-                image[i][j][0] = image_rgb[i][j][0] * r
-                image[i][j][1] = image_rgb[i][j][1] * g
-                image[i][j][2] = image_rgb[i][j][2] * b
-        return image
-        
-    def GetResource(self):
-        path = '/home/airven/.zhuoyi/common/移动数据/存储卡/screen.png'
 
-        result = []
-        reader = easyocr.Reader(['en'])
-        resule_all = reader.readtext(path, paragraph="False")
-        n = 0
-        for n in resule_all:
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[0] = resule_all[n][1]
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[1] = resule_all[n][1]
-            if 0 < resule_all[n][0][0][0] < 1 and 0 < resule_all[n][0][0][1] < 1:
-                result[2] = resule_all[n][1]
-'''"""
 
 class AutoNightWorld():
     def __init__(self, times = 0):
@@ -168,11 +129,11 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(70, 700, 0.5, 0.5)                                  # 点击进攻 
         Core(times = self.times).PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
         while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):                     # 判断是否寻敌完成
-            Core(times = self.times).GetScreen()
+            pass
         self.xiabin()
         nhnw2 = True
         while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
-            Core(times = self.times).GetScreen()
+            pass
         while Core(times = self.times).NotExist(icon_name = 'back_home'):
             Core(times = self.times).GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
             if nhnw2:
@@ -189,18 +150,18 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(965, 655, 0.1, 0.1) 
         Core(times = self.times).PyTap(1110, 75, 0.1, 0.1)
 
+"""class AutoHomeTown():
+    def xiabin():
+        Core.PySwipe(0, 0, 0.5, 0.5)
 
-# class AutoHomeTown():
-#     def xiabin():
-#         Core.PySwipe(0, 0, 0.5, 0.5)
-
-#     def fight(self):
-#         while Core.notexist('移动'):
-#             Core.GetScreen()
-#         Core.PyTap(70, 700, 0.5, 0.5)
-#         Core.PyTap(917, 493, 0.5, 0.5)
-#         while Core.exist('结束战斗'):
-#             Core.GetScreen()
+    def fight(self):
+        while Core.notexist('移动'):
+            Core.GetScreen()
+        Core.PyTap(70, 700, 0.5, 0.5)
+        Core.PyTap(917, 493, 0.5, 0.5)
+        while Core.exist('结束战斗'):
+            Core.GetScreen()
+"""
 
 if __name__ == '__main__':
     n = 1
@@ -210,9 +171,6 @@ if __name__ == '__main__':
     if N == '':
         N = 100
     N = int(N)
-
-    # get_screen_thread = Thread(target=Core.LoopGetScreen,args=(),daemon=True)
-    # get_screen_thread.start()
 
     if choise == '1':
         while n <= N:
@@ -234,5 +192,8 @@ if __name__ == '__main__':
     elif choise == '3':
         print('已退出\n')
         exit()
+    elif choise == '4':
+        while not Core().Exist('attack'):
+            pass
     else:
         print(type(n))
