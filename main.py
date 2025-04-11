@@ -1,14 +1,6 @@
 import cv2
 import time
-import numpy as np
-from numba import jit
-from ppadb.client import Client as AdbClient
 import uiautomator2 as u2
-
-
-client = AdbClient(host="127.0.0.1", port = 5037)
-client.remote_connect(host="127.0.0.1", port=5555)
-device_ppadb = client.device("127.0.0.1:5555")
 
 device = u2.connect("127.0.0.1:5555")
 
