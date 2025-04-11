@@ -4,11 +4,11 @@ import uiautomator2 as u2
 
 device = u2.connect("127.0.0.1:5555")
 
-
 class Position:
     def __init__(self, x, y):
         self.x = int(x)
         self.y = int(y)
+
 
 class Core():
     def __init__(
@@ -106,7 +106,6 @@ class Core():
         device.swipe(from_x, from_y, to_x, to_y, way_time)
         # device_ppadb.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
-
 
 
 class AutoNightWorld():
