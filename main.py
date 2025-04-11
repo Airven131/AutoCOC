@@ -1,12 +1,16 @@
-import os
 import cv2
 import time
 import numpy as np
+from numba import jit
 from ppadb.client import Client as AdbClient
+import uiautomator2 as u2
+
 
 client = AdbClient(host="127.0.0.1", port = 5037)
 client.remote_connect(host="127.0.0.1", port=5555)
-device = client.device("127.0.0.1:5555")
+device_ppadb = client.device("127.0.0.1:5555")
+
+device = u2.connect("127.0.0.1:5555")
 
 
 class Position:
@@ -15,15 +19,29 @@ class Position:
         self.y = int(y)
 
 class Core():
-    def __init__(self, times = 0, icon_name = None, image_name = None, conf = 0.9):
+    def __init__(
+            self,
+            times : int | None = 0):
         self.times = times
-        self.icon_name = icon_name
-        self.image_name = image_name
-        self.conf = conf
         pass
 
+    def GetScreen(self):
+        time_now = time.strftime('%H:%M:%S', time.localtime())
 
-    def GetIconPosition(self, icon_name = None, conf = 0.9):
+        # result = device_ppadb.screencap()
+        # resule_trans = np.frombuffer(result, np.uint8)
+        # image = cv2.imdecode(resule_trans, cv2.IMREAD_COLOR)
+        image = device.screenshot(format='opencv')
+
+        print('[%d][%s]:get the screen' %(self.times, time_now))
+        time.sleep(1)
+        return image
+
+    def GetIconPosition(self,
+                        icon_name : str,
+                        conf : float | None = 0.9):
+        if icon_name is None:
+            raise NameError
         icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_COLOR)
         image = self.GetScreen()
         icon_gray = cv2.cvtColor(icon, cv2.COLOR_BGR2GRAY)
@@ -31,9 +49,9 @@ class Core():
 
         # 匹配图片和图标
         resule = cv2.matchTemplate(image_gray, icon_gray, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, max_loc = cv2.minMaxLoc(resule)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(resule)
 
-        # 丢弃掉匹配值较低的pisition
+        # 丢弃掉匹配值较低的position
         if max_val < conf:
             return Position(-1, -1)
         
@@ -42,19 +60,9 @@ class Core():
 
         return Position(x, y)
 
-
-    def GetScreen(self):
-        time_now = time.strftime('%H:%M:%S', time.localtime())
-
-        result = device.screencap()
-        resule_trans = np.frombuffer(result, np.uint8)
-        image = cv2.imdecode(resule_trans, cv2.IMREAD_COLOR)
-
-        print('[%d][%s]:get the screen' %(self.times, time_now))
-        time.sleep(1)
-        return image
-
-    def Exist(self, icon_name = None, conf = 0.9):
+    def Exist(self,
+              icon_name : str | None,
+              conf : float | None = 0.9):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -68,7 +76,9 @@ class Core():
             print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time_now, icon_name, x, y))
             return True
         
-    def NotExist(self, icon_name = None, conf = None):
+    def NotExist(self,
+                 icon_name = None,
+                 conf : float | None = ''):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -82,18 +92,27 @@ class Core():
             print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time_now, icon_name, x, y))
             return False
 
-    def PyTap(self, x, y, before_time = 2.0, after_time = 2.0):
+    def PyTap(self,
+              x : int,
+              y : int,
+              before_time : float | None = 2.0,
+              after_time :float | None = 2.0):
         time.sleep(before_time)
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        # os.system('adb shell input tap %d %d' %(x, y))
-        device.shell('input tap %d %d' %(x, y))
+        device.click(x, y)
+        # device_ppadb.shell('input tap %d %d' %(x, y))
         print('[%d][%s]:Successful tap %d %d' %(self.times, time_now, x, y))
         time.sleep(after_time)
 
-    def PySwipe(self, from_x, from_y, to_x, to_y, way_time):
+    def PySwipe(self,
+                from_x : int,
+                from_y : int,
+                to_x : int,
+                to_y : int,
+                way_time : float):
         time_now = time.strftime('%H:%M:%S', time.localtime())
-        # os.system('adb shell input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
-        device.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
+        device.swipe(from_x, from_y, to_x, to_y, way_time)
+        # device_ppadb.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
 
 
@@ -103,44 +122,44 @@ class AutoNightWorld():
         self.times = times
 
     def xiabin(self):
-        Core(times = self.times).PyTap(180, 705, 0.05, 0.05)                                         # 点击第1个单位
-        Core(times = self.times).PyTap(21, 366, 0.05, 0.05)
-        Core(times = self.times).PyTap(290, 705, 0.05, 0.05)                                         # 点击第2个单位
-        Core(times = self.times).PyTap(109, 275, 0.05, 0.05)
-        Core(times = self.times).PyTap(370, 705, 0.05, 0.05)                                         # 点击第3个单位
-        Core(times = self.times).PyTap(365, 87, 0.05, 0.05)
-        Core(times = self.times).PyTap(460, 705, 0.05, 0.05)                                         # 点击第4个单位
-        Core(times = self.times).PyTap(843, 56, 0.05, 0.05)
-        Core(times = self.times).PyTap(550, 705, 0.05, 0.05)                                         # 点击第5个单位
-        Core(times = self.times).PyTap(1110, 250, 0.05, 0.05)
-        Core(times = self.times).PyTap(640, 705, 0.05, 0.05)                                         # 点击第6个单位
-        Core(times = self.times).PyTap(1173, 450, 0.05, 0.05)
-        Core(times = self.times).PyTap(730, 705, 0.05, 0.05)                                         # 点击第7个单位
-        Core(times = self.times).PyTap(1000, 610, 0.05, 0.05)
-        Core(times = self.times).PyTap(820, 705, 0.05, 0.05)                                         # 点击第8个单位
-        Core(times = self.times).PyTap(310, 610, 0.05, 0.05)
-        # Core.PyTap(910, 705)                                       # 点击第9个单位
-        # Core.PyTap(263, 573)
-        # Core.PyTap(1000, 705)                                      # 点击第10个单位
-        # Core.PyTap(21, 366)
+        Core(times = self.times).PyTap(200, 1000, 0.05, 0.05)       # 点击第0个单位
+        Core(times = self.times).PyTap(280, 560, 0.05, 0.05)
+        Core(times = self.times).PyTap(360, 1000, 0.05, 0.05)       # 点击第1个单位
+        Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
+        Core(times = self.times).PyTap(520, 1000, 0.05, 0.05)       # 点击第2个单位
+        Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
+        Core(times = self.times).PyTap(680, 1000, 0.05, 0.05)       # 点击第3个单位
+        Core(times = self.times).PyTap(600, 800, 0.05, 0.05)
+        Core(times = self.times).PyTap(840, 1000, 0.05, 0.05)       # 点击第4个单位
+        Core(times = self.times).PyTap(200, 1000, 0.05, 0.05)
+        Core(times = self.times).PyTap(1000, 1000, 0.05, 0.05)      # 点击第5个单位
+        Core(times = self.times).PyTap(660, 280, 0.05, 0.05)
+        Core(times = self.times).PyTap(1160, 1000, 0.05, 0.05)      # 点击第6个单位
+        Core(times = self.times).PyTap(1300, 300, 0.05, 0.05)
+        Core(times = self.times).PyTap(1320, 1000, 0.05, 0.05)      # 点击第7个单位
+        Core(times = self.times).PyTap(1305, 800, 0.05, 0.05)
+        Core(times = self.times).PyTap(910, 705, 0.05, 0.05)        # 点击第8个单位
+        Core(times = self.times).PyTap(610, 805, 0.05, 0.05)
 
     def Fight(self):
         Core(times = self.times).GetScreen()
-        Core(times = self.times).PyTap(70, 700, 0.5, 0.5)                                  # 点击进攻 
-        Core(times = self.times).PyTap(976, 500, 0.5, 0.5)                                 # 点击立即寻找
-        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):                     # 判断是否寻敌完成
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)   # 点击进攻 
+        Core(times = self.times).PyTap(1450, 720, 0.5, 0.5)  # 点击立即寻找
+        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):     # 判断是否寻敌完成
             pass
         self.xiabin()
+        #下兵完成
         nhnw2 = True
-        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #下兵完成，循环判断是否进入结束战斗
+        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #循环判断是否进入结束战斗
             pass
-        while Core(times = self.times).NotExist(icon_name = 'back_home'):
-            Core(times = self.times).GetScreen()         #结束战斗，循环判断是否进入二阶段还是战斗
+        #第一阶段战斗结束
+        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9):   #如果只有一个阶段则直接推出
+            #循环判断是否进入二阶段还是战斗
             if nhnw2:
-                if Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #判断是否存在来判断是否进入二阶段
+                if Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack_2', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
                     nhnw2 = False
-        Core(times = self.times).PyTap(645, 645) #点击回营
+        Core(times = self.times).PyTap(972, 918) #点击回营
         while Core(times = self.times).NotExist(icon_name = 'move', conf = 0.8):
             Core(times = self.times).GetScreen()
             if Core(times = self.times).Exist(icon_name = 'confirm', conf = 0.7):   # 用于判断是否有胜利之星奖励
@@ -150,7 +169,8 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(965, 655, 0.1, 0.1) 
         Core(times = self.times).PyTap(1110, 75, 0.1, 0.1)
 
-"""class AutoHomeTown():
+
+class AutoHomeTown():
     def xiabin():
         Core.PySwipe(0, 0, 0.5, 0.5)
 
@@ -161,18 +181,22 @@ class AutoNightWorld():
         Core.PyTap(917, 493, 0.5, 0.5)
         while Core.exist('结束战斗'):
             Core.GetScreen()
-"""
+
 
 if __name__ == '__main__':
     n = 1
     N = 100
     choise = input('1.自动家乡作战\n2.自动夜世界作战\n3.退出\n')
-    N = input('请输入循环次数(default = 100)\n')
-    if N == '':
-        N = 100
-    N = int(N)
+    try:
+        N = int(input('请输入循环次数(default = 100)\n'))
+    except ValueError:
+        pass
+    # print('n的类型是%', type(N), '值是', N)
 
     if choise == '1':
+        print(time.strftime('[%H:%M:%S]:'), '暂时无法使用，按任意键推出')
+        input()
+        exit()
         while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
