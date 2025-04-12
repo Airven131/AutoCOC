@@ -101,7 +101,7 @@ class Core():
                 from_y : int,
                 to_x : int,
                 to_y : int,
-                way_time : float):
+                way_time : float | None = 0.5):
         time_now = time.strftime('%H:%M:%S', time.localtime())
         device.swipe(from_x, from_y, to_x, to_y, way_time)
         # device_ppadb.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
@@ -113,52 +113,55 @@ class AutoNightWorld():
         self.times = times
 
     def xiabin(self):
-        Core(times = self.times).PyTap(200, 1000, 0.05, 0.05)       # 点击第0个单位
-        Core(times = self.times).PyTap(280, 560, 0.05, 0.05)
-        Core(times = self.times).PyTap(360, 1000, 0.05, 0.05)       # 点击第1个单位
+        Core(times = self.times).PyTap(197, 980, 0.05, 0.10)       # 点击第0个单位
+        Core(times = self.times).PyTap(280, 560, 0.05, 0.10)
+        Core(times = self.times).PyTap(363, 980, 0.05, 0.05)       # 点击第1个单位
         Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
-        Core(times = self.times).PyTap(520, 1000, 0.05, 0.05)       # 点击第2个单位
+        Core(times = self.times).PyTap(519, 970, 0.05, 0.05)       # 点击第2个单位
         Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
-        Core(times = self.times).PyTap(680, 1000, 0.05, 0.05)       # 点击第3个单位
+        Core(times = self.times).PyTap(665, 965, 0.05, 0.05)       # 点击第3个单位
         Core(times = self.times).PyTap(600, 800, 0.05, 0.05)
-        Core(times = self.times).PyTap(840, 1000, 0.05, 0.05)       # 点击第4个单位
-        Core(times = self.times).PyTap(200, 1000, 0.05, 0.05)
-        Core(times = self.times).PyTap(1000, 1000, 0.05, 0.05)      # 点击第5个单位
+        Core(times = self.times).PyTap(824, 971, 0.05, 0.05)       # 点击第4个单位
+        Core(times = self.times).PyTap(400, 900, 0.05, 0.05)
+        Core(times = self.times).PyTap(979, 963, 0.05, 0.05)       # 点击第5个单位
         Core(times = self.times).PyTap(660, 280, 0.05, 0.05)
-        Core(times = self.times).PyTap(1160, 1000, 0.05, 0.05)      # 点击第6个单位
+        Core(times = self.times).PyTap(1127, 962, 0.05, 0.05)      # 点击第6个单位
         Core(times = self.times).PyTap(1300, 300, 0.05, 0.05)
-        Core(times = self.times).PyTap(1320, 1000, 0.05, 0.05)      # 点击第7个单位
+        Core(times = self.times).PyTap(1282, 964, 0.05, 0.05)      # 点击第7个单位
         Core(times = self.times).PyTap(1305, 800, 0.05, 0.05)
-        Core(times = self.times).PyTap(910, 705, 0.05, 0.05)        # 点击第8个单位
+        Core(times = self.times).PyTap(1432, 969, 0.05, 0.05)      # 点击第8个单位
         Core(times = self.times).PyTap(610, 805, 0.05, 0.05)
+        Core(times = self.times).PyTap(280, 560, 0.05, 0.10)
+        Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
+        Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
 
     def Fight(self):
         Core(times = self.times).GetScreen()
-        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)   # 点击进攻 
-        Core(times = self.times).PyTap(1450, 720, 0.5, 0.5)  # 点击立即寻找
-        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):     # 判断是否寻敌完成
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)                                                     # 点击进攻 
+        Core(times = self.times).PyTap(1450, 720, 0.5, 0.5)                                                     # 点击立即寻找
+        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):             # 判断是否寻敌完成
             pass
         self.xiabin()
         #下兵完成
-        nhnw2 = True
-        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):  #循环判断是否进入结束战斗
+        is_attack_part_2 = False
+        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):         #循环判断是否进入结束战斗
             pass
         #第一阶段战斗结束
-        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9):   #如果只有一个阶段则直接推出
+        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9):                           #如果只有一个阶段则直接推出
             #循环判断是否进入二阶段还是战斗
-            if nhnw2:
+            if not is_attack_part_2:
                 if Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack_2', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
-                    nhnw2 = False
-        Core(times = self.times).PyTap(972, 918) #点击回营
+                    is_attack_part_2 = True
+        Core(times = self.times).PyTap(972, 918)                                    #点击回营
         while Core(times = self.times).NotExist(icon_name = 'move', conf = 0.8):
             Core(times = self.times).GetScreen()
             if Core(times = self.times).Exist(icon_name = 'confirm', conf = 0.7):   # 用于判断是否有胜利之星奖励
-                Core(times = self.times).PyTap(600, 600, 2, 3)                                  # 判断是否回城完成
-        Core(times = self.times).PySwipe(976, 500, 976, 700, 500)
-        Core(times = self.times).PyTap(926, 108, 0.2, 0.2) #点击圣水车
-        Core(times = self.times).PyTap(965, 655, 0.1, 0.1) 
-        Core(times = self.times).PyTap(1110, 75, 0.1, 0.1)
+                Core(times = self.times).PyTap(600, 600, 2, 3)                      # 判断是否回城完成
+        Core(times = self.times).PySwipe(976, 500, 976, 700, 0.5)
+        Core(times = self.times).PyTap(1376, 91, 0.2, 0.2)                          #点击圣水车
+        Core(times = self.times).PyTap(1420, 927, 0.1, 0.1) 
+        Core(times = self.times).PyTap(1610, 105, 0.1, 0.1)
 
 
 class AutoHomeTown():
