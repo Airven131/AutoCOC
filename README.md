@@ -1,7 +1,7 @@
 ## AutoCOC
-这是一款适用于xDroid的Clash of Clans半自动脚本
+这是一款Clash of Clans半自动脚本
 
-游戏窗口大小1265*772
+游戏窗口大小1920x10880
 
 在命令行界面运行
 
