@@ -98,7 +98,6 @@ class Core():
         time.sleep(before_time)
         time_now = time.strftime('%H:%M:%S', time.localtime())
         device.click(x, y)
-        # device_ppadb.shell('input tap %d %d' %(x, y))
         print('[%d][%s]:Successful tap %d %d' %(self.times, time_now, x, y))
         time.sleep(after_time)
 
@@ -110,7 +109,6 @@ class Core():
                 way_time : float | None = 0.5):
         time_now = time.strftime('%H:%M:%S', time.localtime())
         device.swipe(from_x, from_y, to_x, to_y, way_time)
-        # device_ppadb.shell('input swipe %d %d %d %d %d' %(from_x, from_y, to_x, to_y, int(way_time)))
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
 
 
@@ -193,7 +191,6 @@ if __name__ == '__main__':
         N = int(input('请输入循环次数(default = 100)\n'))
     except ValueError:
         pass
-    # print('n的类型是%', type(N), '值是', N)
 
     if choise == '1':
         print(time.strftime('[%H:%M:%S]:'), '暂时无法使用，按任意键推出')
@@ -218,8 +215,3 @@ if __name__ == '__main__':
     elif choise == '3':
         print('已退出\n')
         exit()
-    elif choise == '4':
-        while not Core().Exist('attack'):
-            pass
-    else:
-        print(type(n))
