@@ -1,8 +1,14 @@
 import cv2
 import time
 import uiautomator2 as u2
+import yaml
 
-device = u2.connect("127.0.0.1:5555")
+with open('config.yml', 'r', encoding='utf-8') as file:
+    config = yaml.safe_load(file)
+
+dev_addr = config['device']['host'] + ':' + config['device']['port']
+device = u2.connect(dev_addr)
+
 
 class Position:
     def __init__(self, x, y):
@@ -109,7 +115,7 @@ class Core():
 
 
 class AutoNightWorld():
-    def __init__(self, times = 0):
+    def __init__(self, times : int | None = 0):
         self.times = times
 
     def xiabin(self):
@@ -138,6 +144,8 @@ class AutoNightWorld():
     def Fight(self):
         Core(times = self.times).GetScreen()
         Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)                                                     # 点击进攻 
+        while Core(times = self.times).Exist(icon_name = 'time_left_before_last_attck_finished'):               # 判断上一场战斗是否完成
+            pass
         Core(times = self.times).PyTap(1450, 720, 0.5, 0.5)                                                     # 点击立即寻找
         while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):             # 判断是否寻敌完成
             pass
