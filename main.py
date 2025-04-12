@@ -156,8 +156,8 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(972, 918)                                    #点击回营
         while Core(times = self.times).NotExist(icon_name = 'move', conf = 0.8):
             Core(times = self.times).GetScreen()
-            if Core(times = self.times).Exist(icon_name = 'confirm', conf = 0.7):   # 用于判断是否有胜利之星奖励
-                Core(times = self.times).PyTap(600, 600, 2, 3)                      # 判断是否回城完成
+            if Core(times = self.times).Exist(icon_name = 'night_world_daily_reward', conf = 0.7):   # 用于判断是否有胜利之星奖励
+                Core(times = self.times).PyTap(966, 846, 2, 3)                      # 判断是否回城完成
         Core(times = self.times).PySwipe(976, 500, 976, 700, 0.5)
         Core(times = self.times).PyTap(1376, 91, 0.2, 0.2)                          #点击圣水车
         Core(times = self.times).PyTap(1420, 927, 0.1, 0.1) 
