@@ -23,12 +23,9 @@ class Core():
         self.times = times
         pass
 
-    def GetScreen(self):
+    def GetScreen(self, is_print : int | None = 1):
         time_now = time.strftime('%H:%M:%S', time.localtime())
 
-        # result = device_ppadb.screencap()
-        # resule_trans = np.frombuffer(result, np.uint8)
-        # image = cv2.imdecode(resule_trans, cv2.IMREAD_COLOR)
         image = device.screenshot(format='opencv')
 
         print('[%d][%s]:get the screen' %(self.times, time_now))
@@ -59,7 +56,7 @@ class Core():
         return Position(x, y)
 
     def Exist(self,
-              icon_name : str | None,
+              icon_name : str,
               conf : float | None = 0.9):
         if icon_name is None:
             icon_name = self._icon_name
@@ -75,8 +72,8 @@ class Core():
             return True
         
     def NotExist(self,
-                 icon_name = None,
-                 conf : float | None = ''):
+                 icon_name : str,
+                 conf : float | None = 0.9):
         if icon_name is None:
             icon_name = self._icon_name
         time_now = time.strftime('%H:%M:%S', time.localtime())
@@ -111,6 +108,17 @@ class Core():
         device.swipe(from_x, from_y, to_x, to_y, way_time)
         print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
 
+    def Launch(self):
+        cur = device.app_current()
+        app = cur['package']
+        
+        if app != 'com.supercell.clashofclans':
+            device.app_start("com.supercell.clashofclans")
+
+        while self.NotExist(icon_name = 'message'):
+            pass
+        time_now = time.strftime('%H:%M:%S', time.localtime())
+        print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time_now))
 
 class AutoNightWorld():
     def __init__(self, times : int | None = 0):
@@ -191,7 +199,7 @@ if __name__ == '__main__':
         N = int(input('请输入循环次数(default = 100)\n'))
     except ValueError:
         pass
-
+    
     if choise == '1':
         print(time.strftime('[%H:%M:%S]:'), '暂时无法使用，按任意键推出')
         input()
@@ -199,12 +207,12 @@ if __name__ == '__main__':
         while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
-            # AutoHomeTown(n).fight()
             exit()
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
             n += 1
     elif choise == '2':
+        Core().Launch()
         while n <= N:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
