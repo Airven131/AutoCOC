@@ -2,6 +2,9 @@ import cv2
 import time
 import uiautomator2 as u2
 import yaml
+from inputimeout import inputimeout, TimeoutOccurred
+from threading import Thread
+
 
 with open('config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
@@ -117,7 +120,7 @@ class Core():
         if app != 'com.supercell.clashofclans':
             device.app_start("com.supercell.clashofclans")
 
-        while self.NotExist(icon_name = 'message'):
+        while self.NotExist(icon_name = 'message', is_print_log = 0):
             pass
         if is_print_log:
             print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime())))
@@ -194,34 +197,46 @@ class AutoHomeTown():
 
 
 if __name__ == '__main__':
-    n = 1
-    N = 100
-    choise = input('1.自动家乡作战\n2.自动夜世界作战\n3.退出\n')
+    launchthread = Thread(target=Core().Launch())
+    launchthread.start()
+
     try:
-        N = int(input('请输入循环次数(default = 100)\n'))
+        choise = inputimeout(prompt='1.自动家乡作战\n2.自动夜世界作战\n3.退出\n5秒内输入(默认值为夜世界):', timeout=5)
+    except TimeoutOccurred:
+        choise = config['gameconfig']['gamemode']
+
+    try:
+        play_times = inputimeout(prompt='请输入战斗次数\n', timeout=5)
+        play_times = int(play_times)
+    except TimeoutOccurred:
+        play_times = config['gameconfig']['gameplaytimes']
     except ValueError:
         pass
     
+    if launchthread.is_alive():
+        launchthread.join()
+
+    current_times = 1
     if choise == '1':
         print(time.strftime('[%H:%M:%S]:'), '暂时无法使用，按任意键推出')
         input()
         exit()
-        while n <= N:
+        while current_times <= play_times:
             time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
+            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now, current_times))
             exit()
             time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
-            n += 1
-    elif choise == '2':
+            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, current_times))
+            current_times += 1
+    elif choise == '2' or choise == None:
         Core().Launch()
-        while n <= N:
+        while current_times <= play_times:
             time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now,n))
-            AutoNightWorld(n).Fight()
+            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now, current_times))
+            AutoNightWorld(current_times).Fight()
             time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, n))
-            n += 1
+            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, current_times))
+            current_times += 1
     elif choise == '3':
         print('已退出\n')
         exit()
