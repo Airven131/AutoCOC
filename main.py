@@ -19,16 +19,17 @@ class Position:
 class Core():
     def __init__(
             self,
-            times : int | None = 0):
+            times : int | None = 0,
+            is_print_log : int | None = 1):
         self.times = times
+        self.is_print_log = is_print_log
         pass
 
-    def GetScreen(self, is_print : int | None = 1):
-        time_now = time.strftime('%H:%M:%S', time.localtime())
+    def GetScreen(self, is_print_log : int | None = 1):
 
         image = device.screenshot(format='opencv')
-
-        print('[%d][%s]:get the screen' %(self.times, time_now))
+        if is_print_log:
+            print('[%d][%s]:get the screen' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         time.sleep(1)
         return image
 
@@ -57,45 +58,44 @@ class Core():
 
     def Exist(self,
               icon_name : str,
-              conf : float | None = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
-        time_now = time.strftime('%H:%M:%S', time.localtime())
+              conf : float | None = 0.9,
+              is_print_log : int | None = 1):
         pos = self.GetIconPosition(icon_name, conf)
         x = pos.x
         y = pos.y
         if x == -1 :
-            print('[%d][%s]:The icon %s is not exist' %(self.times, time_now, icon_name))
+            print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name))
             return False
         else:
-            print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time_now, icon_name, x, y))
+            print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
             return True
         
     def NotExist(self,
                  icon_name : str,
-                 conf : float | None = 0.9):
-        if icon_name is None:
-            icon_name = self._icon_name
-        time_now = time.strftime('%H:%M:%S', time.localtime())
+                 conf : float | None = 0.9,
+                 is_print_log : int | None = 1):
         pos = self.GetIconPosition(icon_name, conf)
         x = pos.x
         y = pos.y
         if x == -1 :
-            print('[%d][%s]:The icon %s is not exist' %(self.times, time_now, icon_name))
+            if is_print_log:
+                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name))
             return True
         else:
-            print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time_now, icon_name, x, y))
+            if is_print_log:
+                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
             return False
 
     def PyTap(self,
               x : int,
               y : int,
               before_time : float | None = 2.0,
-              after_time :float | None = 2.0):
+              after_time :float | None = 2.0,
+              is_print_log : int | None = 1):
         time.sleep(before_time)
-        time_now = time.strftime('%H:%M:%S', time.localtime())
         device.click(x, y)
-        print('[%d][%s]:Successful tap %d %d' %(self.times, time_now, x, y))
+        if is_print_log:
+            print('[%d][%s]:Successful tap %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), x, y))
         time.sleep(after_time)
 
     def PySwipe(self,
@@ -103,12 +103,14 @@ class Core():
                 from_y : int,
                 to_x : int,
                 to_y : int,
-                way_time : float | None = 0.5):
-        time_now = time.strftime('%H:%M:%S', time.localtime())
+                way_time : float | None = 0.5,
+                is_print_log : int | None = 1):
         device.swipe(from_x, from_y, to_x, to_y, way_time)
-        print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time_now, from_x, from_y, to_x, to_y))
+        if is_print_log:
+            print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), from_x, from_y, to_x, to_y))
 
-    def Launch(self):
+    def Launch(self,
+               is_print_log : int | None = 1):
         cur = device.app_current()
         app = cur['package']
         
@@ -117,8 +119,8 @@ class Core():
 
         while self.NotExist(icon_name = 'message'):
             pass
-        time_now = time.strftime('%H:%M:%S', time.localtime())
-        print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time_now))
+        if is_print_log:
+            print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime())))
 
 class AutoNightWorld():
     def __init__(self, times : int | None = 0):
@@ -134,7 +136,7 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(665, 965, 0.05, 0.05)       # 点击第3个单位
         Core(times = self.times).PyTap(600, 800, 0.05, 0.05)
         Core(times = self.times).PyTap(824, 971, 0.05, 0.05)       # 点击第4个单位
-        Core(times = self.times).PyTap(400, 900, 0.05, 0.05)
+        Core(times = self.times).PyTap(400, 800, 0.05, 0.05)
         Core(times = self.times).PyTap(979, 963, 0.05, 0.05)       # 点击第5个单位
         Core(times = self.times).PyTap(660, 280, 0.05, 0.05)
         Core(times = self.times).PyTap(1127, 962, 0.05, 0.05)      # 点击第6个单位
