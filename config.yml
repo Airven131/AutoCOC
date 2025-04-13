@@ -4,3 +4,4 @@ device:
 
 gameconfig:
   gamemode: '2' #1.家乡;2.夜世界
+  gameplaytimes: 100
