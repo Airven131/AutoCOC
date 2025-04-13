@@ -1,3 +1,6 @@
 device:
   host: 127.0.0.1
   port: '5555'
+
+gameconfig:
+  gamemode: '2' #1.家乡;2.夜世界
