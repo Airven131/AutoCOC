@@ -2,9 +2,12 @@ import cv2
 import time
 import uiautomator2 as u2
 import yaml
+import logging
+import re
 from inputimeout import inputimeout, TimeoutOccurred
 from threading import Thread
-
+from func_timeout import func_set_timeout, FunctionTimedOut
+from paddleocr import PaddleOCR
 
 with open('config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
@@ -12,11 +15,28 @@ with open('config.yml', 'r', encoding='utf-8') as file:
 dev_addr = config['device']['host'] + ':' + config['device']['port']
 device = u2.connect(dev_addr)
 
+logging.disable(logging.DEBUG)
+ocr = PaddleOCR(use_angle_cls=True, lang='en', ppocrdebug=False)
+
+
 
 class Position:
     def __init__(self, x, y):
         self.x = int(x)
         self.y = int(y)
+
+
+
+class Resource:
+    def __init__(self,
+                 gold : int | None = 0,
+                 elixir: int | None = 0,
+                 darkelixir: int | None = 0):
+        self.gold = gold
+        self.elixir = elixir
+        self.darkelixir = darkelixir
+        self.totle = gold + elixir + darkelixir * 150
+
 
 
 class Core():
@@ -28,6 +48,7 @@ class Core():
         self.is_print_log = is_print_log
         pass
 
+
     def GetScreen(self, is_print_log : int | None = 1):
 
         image = device.screenshot(format='opencv')
@@ -35,6 +56,7 @@ class Core():
             print('[%d][%s]:get the screen' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         time.sleep(1)
         return image
+
 
     def GetIconPosition(self,
                         icon_name : str,
@@ -59,6 +81,70 @@ class Core():
 
         return Position(x, y)
 
+
+    def GetRes(self,
+               is_print_log : int | None = 0):
+        if is_print_log:
+            print('[%d][%s]:start get resource' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        image = device.screenshot(format='opencv')
+
+        gold_img = image[150:190, 90:300]
+        elixir_img = image[206:246, 90:300]
+        darkelixir_img = image[262:302, 90:300]
+        
+        # cv2.imshow('screen', image)
+        # cv2.imshow('gold', gold_img)
+        # cv2.imshow('elixir', elixir_img)
+        # cv2.imshow('dark', darkelixir_img)
+        # time.sleep(3)
+        # cv2.destroyAllWindows()
+        try:
+            gold = ocr.ocr(gold_img, cls=True)[0][0][-1][0]
+            elixir = ocr.ocr(elixir_img, cls=True)[0][0][-1][0]
+            darkelixir = ocr.ocr(darkelixir_img, cls=True)[0][0][-1][0]
+        except TypeError:
+            return Resource(0, 0, 0)
+
+        # print('ggold', gold)
+        # print('elixirr', elixir)
+        # print('darkelixirr', darkelixir)
+        try:
+            gold_num = int(gold)
+        except ValueError:
+            digital_match = r'\d+'
+            digital = re.findall(digital_match, gold)
+            gold_num = ''
+            for d in digital:
+                gold_num += d
+            gold_num = int(gold_num)
+
+        try:
+            elixir_num = int(elixir)
+        except ValueError:
+            digital_match = r'\d+'
+            digital = re.findall(digital_match, elixir)
+            elixir_num = ''
+            for d in digital:
+                elixir_num += d
+            elixir_num = int(elixir_num)
+
+        try:
+            darkelixir_num = int(darkelixir)
+        except ValueError:
+            digital_match = r'\d+'
+            digital = re.findall(digital_match, darkelixir)
+            darkelixir_num = ''
+            for d in digital:
+                darkelixir_num += d
+            darkelixir_num = int(darkelixir_num)
+
+
+        if is_print_log:
+            print('[%d][%s]:success find gold [%d], elixir [%d], darkelixir [%d]' %(self.times, time.strftime('%H:%M:%S', time.localtime()), gold, elixir, darkelixir))
+
+        return Resource(gold_num, elixir_num, darkelixir_num)
+
+
     def Exist(self,
               icon_name : str,
               conf : float | None = 0.9,
@@ -73,6 +159,7 @@ class Core():
             print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
             return True
         
+
     def NotExist(self,
                  icon_name : str,
                  conf : float | None = 0.9,
@@ -89,6 +176,7 @@ class Core():
                 print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
             return False
 
+
     def PyTap(self,
               x : int,
               y : int,
@@ -101,6 +189,7 @@ class Core():
             print('[%d][%s]:Successful tap %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), x, y))
         time.sleep(after_time)
 
+
     def PySwipe(self,
                 from_x : int,
                 from_y : int,
@@ -111,6 +200,7 @@ class Core():
         device.swipe(from_x, from_y, to_x, to_y, way_time)
         if is_print_log:
             print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), from_x, from_y, to_x, to_y))
+
 
     def Launch(self,
                is_print_log : int | None = 1):
@@ -125,9 +215,12 @@ class Core():
         if is_print_log:
             print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime())))
 
+
+
 class AutoNightWorld():
     def __init__(self, times : int | None = 0):
         self.times = times
+
 
     def xiabin(self):
         Core(times = self.times).PyTap(197, 980, 0.05, 0.10)       # 点击第0个单位
@@ -151,6 +244,7 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(280, 560, 0.05, 0.10)
         Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
         Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
+
 
     def Fight(self):
         Core(times = self.times).GetScreen()
@@ -184,16 +278,26 @@ class AutoNightWorld():
 
 
 class AutoHomeTown():
+    def __init__(self, times : int | None = 0):
+        self.times = times
+
     def xiabin():
         Core.PySwipe(0, 0, 0.5, 0.5)
 
-    def fight(self):
-        while Core.notexist('移动'):
-            Core.GetScreen()
-        Core.PyTap(70, 700, 0.5, 0.5)
-        Core.PyTap(917, 493, 0.5, 0.5)
-        while Core.exist('结束战斗'):
-            Core.GetScreen()
+    def Fight(self):
+        Core(times = self.times).GetScreen()
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)
+        Core(times = self.times).PyTap(1400, 700, 0.5, 0.5)
+        while True:
+            while Core(times = self.times).NotExist(icon_name = 'finish_attack'):
+                pass
+            time.sleep(1)
+            resource = Core(times = self.times).GetRes()
+            if resource.gold < 1000000:
+                print('[%d][%s]:resource is only [%d], go to next' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.gold))
+                Core(times = self.times).PyTap(1800, 800, 0.5, 0.5)
+            else:
+                exit()
 
 
 if __name__ == '__main__':
@@ -207,7 +311,10 @@ if __name__ == '__main__':
 
     try:
         play_times = inputimeout(prompt='请输入战斗次数\n', timeout=5)
-        play_times = int(play_times)
+        if play_times is None:
+            play_times = config['gameconfig']['gameplaytimes']
+        else:
+            play_times = int(play_times)
     except TimeoutOccurred:
         play_times = config['gameconfig']['gameplaytimes']
     except ValueError:
@@ -218,13 +325,11 @@ if __name__ == '__main__':
 
     current_times = 1
     if choise == '1':
-        print(time.strftime('[%H:%M:%S]:'), '暂时无法使用，按任意键推出')
-        input()
-        exit()
         while current_times <= play_times:
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now, current_times))
-            exit()
+            # exit()
+            AutoHomeTown(current_times).Fight()
             time_now = time.strftime('%H:%M:%S', time.localtime())
             print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, current_times))
             current_times += 1

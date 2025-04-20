@@ -5,3 +5,17 @@ device:
 gameconfig:
   gamemode: '2' #1.家乡;2.夜世界
   gameplaytimes: 100
+  # 家乡寻敌时目标物资数量
+  goldgoal: -1
+  elixirgoal: -1
+  darkelixirggoal: -1
+  # 寻敌目标计算总资源权重
+  goldweight: 1
+  elixirweight: 1
+  darkelixirweight: 150
+
+
+
+
+
+  
