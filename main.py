@@ -60,11 +60,12 @@ class Core():
 
     def GetIconPosition(self,
                         icon_name : str,
-                        conf : float | None = 0.9):
+                        conf : float | None = 0.9,
+                        is_print_log : int | None = 0):
         if icon_name is None:
             raise NameError
         icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_COLOR)
-        image = self.GetScreen()
+        image = self.GetScreen(is_print_log)
         icon_gray = cv2.cvtColor(icon, cv2.COLOR_BGR2GRAY)
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -149,7 +150,7 @@ class Core():
               icon_name : str,
               conf : float | None = 0.9,
               is_print_log : int | None = 1):
-        pos = self.GetIconPosition(icon_name, conf)
+        pos = self.GetIconPosition(icon_name, conf, is_print_log)
         x = pos.x
         y = pos.y
         if x == -1 :
@@ -164,7 +165,7 @@ class Core():
                  icon_name : str,
                  conf : float | None = 0.9,
                  is_print_log : int | None = 1):
-        pos = self.GetIconPosition(icon_name, conf)
+        pos = self.GetIconPosition(icon_name, conf, is_print_log)
         x = pos.x
         y = pos.y
         if x == -1 :
@@ -277,27 +278,63 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(1610, 105, 0.1, 0.1)
 
 
+
 class AutoHomeTown():
     def __init__(self, times : int | None = 0):
         self.times = times
 
-    def xiabin():
-        Core.PySwipe(0, 0, 0.5, 0.5)
+    def xiabin(self):
+        Core(times = self.times).PyTap(350, 1000, 0.5, 0.5, 0)
+        for i in range(14):
+            Core(times = self.times).PyTap(530-35*i, 30+26*i, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(480, 1000, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(620, 1000, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(740, 1000, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(860, 1000, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+
+        Core(times = self.times).PyTap(1000, 1000, 0.05, 0.05, 0)
+
+        Core(times = self.times).PyTap(720, 320, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(720, 500, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(720, 680, 0.05, 0.05, 0)
+
+        Core(times = self.times).PyTap(1000, 200, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1000, 350, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1000, 500, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1000, 650, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1000, 800, 0.05, 0.05, 0)
+
+        Core(times = self.times).PyTap(1280, 320, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1280, 500, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1280, 680, 0.05, 0.05, 0)
 
     def Fight(self):
-        Core(times = self.times).GetScreen()
-        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)
-        Core(times = self.times).PyTap(1400, 700, 0.5, 0.5)
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5, 0)
+        Core(times = self.times).PyTap(1400, 700, 0.5, 0.5, 0)
         while True:
-            while Core(times = self.times).NotExist(icon_name = 'finish_attack'):
+            print('[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+            while Core(times = self.times).NotExist(icon_name = 'finish_attack', is_print_log = 0):
                 pass
+            print('[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
             time.sleep(1)
             resource = Core(times = self.times).GetRes()
             if resource.gold < 1000000:
-                print('[%d][%s]:resource is only [%d], go to next' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.gold))
-                Core(times = self.times).PyTap(1800, 800, 0.5, 0.5)
+                print('[%d][%s]:目标资源仅有 %d , 下一个' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.gold))    
+                Core(times = self.times).PyTap(1800, 800, 0.5, 0.5, 0)
             else:
-                exit()
+                break
+        self.xiabin()
+        print('[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9, is_print_log = 0):
+            pass
+        print('[%d][%s]:战斗结束,回城' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        Core(times = self.times).PyTap(950, 930, 0.05, 0.05, 0)
+        while Core(times = self.times).NotExist(icon_name = 'message', conf = 0.9, is_print_log = 0):
+            pass
 
 
 if __name__ == '__main__':
