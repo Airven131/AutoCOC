@@ -35,7 +35,23 @@ class Resource:
         self.gold = gold
         self.elixir = elixir
         self.darkelixir = darkelixir
-        self.totle = gold + elixir + darkelixir * 150
+        
+        try:
+            goldweight = config['gameconfig']['godlweight']
+        except:
+            goldweight = 1
+
+        try:
+            elixirweight = config['gameconfig']['elixirweight']
+        except:
+            elixirweight = 1
+        
+        try:
+            darkelixirweight = config['gameconfig']['darkelixirweight']
+        except:
+            darkelixirweight = 150
+
+        self.totle = gold * goldweight + elixir * elixirweight + darkelixir * darkelixirweight
 
 
 
@@ -43,29 +59,29 @@ class Core():
     def __init__(
             self,
             times : int | None = 0,
-            is_print_log : int | None = 1):
+            isPrintLog : int | None = 0):
         self.times = times
-        self.is_print_log = is_print_log
+        self.isPrintLog = isPrintLog
         pass
 
 
-    def GetScreen(self, is_print_log : int | None = 1):
+    def GetScreen(self, isPrintLog : int | None = 0):
 
         image = device.screenshot(format='opencv')
-        if is_print_log:
+        if isPrintLog:
             print('[%d][%s]:get the screen' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         time.sleep(1)
         return image
 
 
     def GetIconPosition(self,
-                        icon_name : str,
+                        iconName : str,
                         conf : float | None = 0.9,
-                        is_print_log : int | None = 0):
-        if icon_name is None:
+                        isPrintLog : int | None = 0):
+        if iconName is None:
             raise NameError
-        icon = cv2.imread('./icon/' + icon_name + '.png', cv2.IMREAD_COLOR)
-        image = self.GetScreen(is_print_log)
+        icon = cv2.imread('./icon/' + iconName + '.png', cv2.IMREAD_COLOR)
+        image = self.GetScreen(isPrintLog)
         icon_gray = cv2.cvtColor(icon, cv2.COLOR_BGR2GRAY)
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -84,25 +100,25 @@ class Core():
 
 
     def GetRes(self,
-               is_print_log : int | None = 0):
-        if is_print_log:
+               isPrintLog : int | None = 0):
+        if isPrintLog:
             print('[%d][%s]:start get resource' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         image = device.screenshot(format='opencv')
 
-        gold_img = image[150:190, 90:300]
-        elixir_img = image[206:246, 90:300]
-        darkelixir_img = image[262:302, 90:300]
+        goldImg = image[150:190, 90:300]
+        elixirImg = image[206:246, 90:300]
+        darkelixirImg = image[262:302, 90:300]
         
         # cv2.imshow('screen', image)
-        # cv2.imshow('gold', gold_img)
-        # cv2.imshow('elixir', elixir_img)
-        # cv2.imshow('dark', darkelixir_img)
+        # cv2.imshow('gold', goldImg)
+        # cv2.imshow('elixir', elixirImg)
+        # cv2.imshow('dark', darkelixirImg)
         # time.sleep(3)
         # cv2.destroyAllWindows()
         try:
-            gold = ocr.ocr(gold_img, cls=True)[0][0][-1][0]
-            elixir = ocr.ocr(elixir_img, cls=True)[0][0][-1][0]
-            darkelixir = ocr.ocr(darkelixir_img, cls=True)[0][0][-1][0]
+            gold = ocr.ocr(goldImg, cls=True)[0][0][-1][0]
+            elixir = ocr.ocr(elixirImg, cls=True)[0][0][-1][0]
+            darkelixir = ocr.ocr(darkelixirImg, cls=True)[0][0][-1][0]
         except TypeError:
             return Resource(0, 0, 0)
 
@@ -140,41 +156,43 @@ class Core():
             darkelixir_num = int(darkelixir_num)
 
 
-        if is_print_log:
+        if isPrintLog:
             print('[%d][%s]:success find gold [%d], elixir [%d], darkelixir [%d]' %(self.times, time.strftime('%H:%M:%S', time.localtime()), gold, elixir, darkelixir))
 
         return Resource(gold_num, elixir_num, darkelixir_num)
 
 
     def Exist(self,
-              icon_name : str,
+              iconName : str,
               conf : float | None = 0.9,
-              is_print_log : int | None = 1):
-        pos = self.GetIconPosition(icon_name, conf, is_print_log)
+              isPrintLog : int | None = 0):
+        pos = self.GetIconPosition(iconName, conf, isPrintLog)
         x = pos.x
         y = pos.y
         if x == -1 :
-            print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name))
+            if isPrintLog:
+                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName))
             return False
         else:
-            print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
+            if isPrintLog:
+                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y))
             return True
         
 
     def NotExist(self,
-                 icon_name : str,
+                 iconName : str,
                  conf : float | None = 0.9,
-                 is_print_log : int | None = 1):
-        pos = self.GetIconPosition(icon_name, conf, is_print_log)
+                 isPrintLog : int | None = 0):
+        pos = self.GetIconPosition(iconName, conf, isPrintLog)
         x = pos.x
         y = pos.y
         if x == -1 :
-            if is_print_log:
-                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name))
+            if isPrintLog:
+                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName))
             return True
         else:
-            if is_print_log:
-                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), icon_name, x, y))
+            if isPrintLog:
+                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y))
             return False
 
 
@@ -183,10 +201,10 @@ class Core():
               y : int,
               before_time : float | None = 2.0,
               after_time :float | None = 2.0,
-              is_print_log : int | None = 1):
+              isPrintLog : int | None = 0):
         time.sleep(before_time)
         device.click(x, y)
-        if is_print_log:
+        if isPrintLog:
             print('[%d][%s]:Successful tap %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), x, y))
         time.sleep(after_time)
 
@@ -197,23 +215,23 @@ class Core():
                 to_x : int,
                 to_y : int,
                 way_time : float | None = 0.5,
-                is_print_log : int | None = 1):
+                isPrintLog : int | None = 0):
         device.swipe(from_x, from_y, to_x, to_y, way_time)
-        if is_print_log:
+        if isPrintLog:
             print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), from_x, from_y, to_x, to_y))
 
 
     def Launch(self,
-               is_print_log : int | None = 1):
+               isPrintLog : int | None = 0):
         cur = device.app_current()
         app = cur['package']
         
         if app != 'com.supercell.clashofclans':
             device.app_start("com.supercell.clashofclans")
 
-        while self.NotExist(icon_name = 'message', is_print_log = 0):
+        while self.NotExist(iconName = 'message', isPrintLog = 0):
             pass
-        if is_print_log:
+        if isPrintLog:
             print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime())))
 
 
@@ -249,28 +267,41 @@ class AutoNightWorld():
 
     def Fight(self):
         Core(times = self.times).GetScreen()
-        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)                                                     # 点击进攻 
-        while Core(times = self.times).Exist(icon_name = 'time_left_before_last_attck_finished'):               # 判断上一场战斗是否完成
-            pass
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)                                                     # 点击进攻
+        isAttackCrash = False
+
+        isShowLastAttackInfo = False
+        while Core(times = self.times).Exist(iconName = 'time_left_before_last_attck_finished'):               # 判断上一场战斗是否完成
+            if not isShowLastAttackInfo:
+                print('[%d][%s]:等待上一场战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+                isShowLastAttackInfo = True
         Core(times = self.times).PyTap(1450, 720, 0.5, 0.5)                                                     # 点击立即寻找
-        while Core(times = self.times).NotExist(icon_name = 'time_left_before_attack', conf = 0.6):             # 判断是否寻敌完成
+
+        print('[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        while Core(times = self.times).NotExist(iconName = 'time_left_before_attack', conf = 0.6):             # 判断是否寻敌完成
             pass
+        print('[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+
         self.xiabin()
-        #下兵完成
-        is_attack_part_2 = False
-        while Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack', conf = 0.6):         #循环判断是否进入结束战斗
+        print('[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        isAttackPart2 = False
+        while Core(times = self.times).Exist(iconName = 'time_left_before_finish_attack', conf = 0.6):         #循环判断是否进入结束战斗
             pass
-        #第一阶段战斗结束
-        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9):                           #如果只有一个阶段则直接推出
+        print('[%d][%s]:第一阶段战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+
+        while Core(times = self.times).NotExist(iconName = 'back_home', conf = 0.9):                           #如果只有一个阶段则直接推出
             #循环判断是否进入二阶段还是战斗
-            if not is_attack_part_2:
-                if Core(times = self.times).Exist(icon_name = 'time_left_before_finish_attack_2', conf = 0.6):  #判断是否存在来判断是否进入二阶段
+            if not isAttackPart2:
+                if Core(times = self.times).Exist(iconName = 'time_left_before_finish_attack_2', conf = 0.6):  #判断是否存在来判断是否进入二阶段
                     self.xiabin()
-                    is_attack_part_2 = True
+                    print('[%d][%s]:等待第二阶段战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+                    isAttackPart2 = True
+        print('[%d][%s]:所有战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+
         Core(times = self.times).PyTap(972, 918)                                    #点击回营
-        while Core(times = self.times).NotExist(icon_name = 'move', conf = 0.8):
+        while Core(times = self.times).NotExist(iconName = 'move', conf = 0.8):
             Core(times = self.times).GetScreen()
-            if Core(times = self.times).Exist(icon_name = 'night_world_daily_reward', conf = 0.7):   # 用于判断是否有胜利之星奖励
+            if Core(times = self.times).Exist(iconName = 'night_world_daily_reward', conf = 0.7):   # 用于判断是否有胜利之星奖励
                 Core(times = self.times).PyTap(966, 846, 2, 3)                      # 判断是否回城完成
         Core(times = self.times).PySwipe(976, 500, 976, 700, 0.5)
         Core(times = self.times).PyTap(1376, 91, 0.2, 0.2)                          #点击圣水车
@@ -287,15 +318,20 @@ class AutoHomeTown():
         Core(times = self.times).PyTap(350, 1000, 0.5, 0.5, 0)
         for i in range(14):
             Core(times = self.times).PyTap(530-35*i, 30+26*i, 0.05, 0.05, 0)
+        
         Core(times = self.times).PyTap(480, 1000, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+
         Core(times = self.times).PyTap(620, 1000, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+
         Core(times = self.times).PyTap(740, 1000, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+
         Core(times = self.times).PyTap(860, 1000, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
 
+        #选择地震法术并施放
         Core(times = self.times).PyTap(1000, 1000, 0.05, 0.05, 0)
 
         Core(times = self.times).PyTap(720, 320, 0.05, 0.05, 0)
@@ -317,23 +353,23 @@ class AutoHomeTown():
         Core(times = self.times).PyTap(1400, 700, 0.5, 0.5, 0)
         while True:
             print('[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
-            while Core(times = self.times).NotExist(icon_name = 'finish_attack', is_print_log = 0):
+            while Core(times = self.times).NotExist(iconName = 'finish_attack', isPrintLog = 0):
                 pass
             print('[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
             time.sleep(1)
             resource = Core(times = self.times).GetRes()
-            if resource.gold < 1000000:
+            if resource.totle < 2000000:
                 print('[%d][%s]:目标资源仅有 %d , 下一个' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.gold))    
                 Core(times = self.times).PyTap(1800, 800, 0.5, 0.5, 0)
             else:
                 break
         self.xiabin()
         print('[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
-        while Core(times = self.times).NotExist(icon_name = 'back_home', conf = 0.9, is_print_log = 0):
+        while Core(times = self.times).NotExist(iconName = 'back_home', conf = 0.9, isPrintLog = 0):
             pass
         print('[%d][%s]:战斗结束,回城' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
         Core(times = self.times).PyTap(950, 930, 0.05, 0.05, 0)
-        while Core(times = self.times).NotExist(icon_name = 'message', conf = 0.9, is_print_log = 0):
+        while Core(times = self.times).NotExist(iconName = 'message', conf = 0.9, isPrintLog = 0):
             pass
 
 
