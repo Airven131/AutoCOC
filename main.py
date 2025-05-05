@@ -35,7 +35,7 @@ class Resource:
         self.gold = gold
         self.elixir = elixir
         self.darkelixir = darkelixir
-        
+
         try:
             goldweight = config['gameconfig']['godlweight']
         except:
@@ -81,7 +81,7 @@ class Core():
         if iconName is None:
             raise NameError
         icon = cv2.imread('./icon/' + iconName + '.png', cv2.IMREAD_COLOR)
-        image = self.GetScreen(isPrintLog)
+        image = device.screenshot(format='opencv')
         icon_gray = cv2.cvtColor(icon, cv2.COLOR_BGR2GRAY)
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -248,18 +248,18 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
         Core(times = self.times).PyTap(519, 970, 0.05, 0.05)       # 点击第2个单位
         Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
-        Core(times = self.times).PyTap(665, 965, 0.05, 0.05)       # 点击第3个单位
-        Core(times = self.times).PyTap(600, 800, 0.05, 0.05)
-        Core(times = self.times).PyTap(824, 971, 0.05, 0.05)       # 点击第4个单位
-        Core(times = self.times).PyTap(400, 800, 0.05, 0.05)
-        Core(times = self.times).PyTap(979, 963, 0.05, 0.05)       # 点击第5个单位
-        Core(times = self.times).PyTap(660, 280, 0.05, 0.05)
-        Core(times = self.times).PyTap(1127, 962, 0.05, 0.05)      # 点击第6个单位
-        Core(times = self.times).PyTap(1300, 300, 0.05, 0.05)
-        Core(times = self.times).PyTap(1282, 964, 0.05, 0.05)      # 点击第7个单位
-        Core(times = self.times).PyTap(1305, 800, 0.05, 0.05)
-        Core(times = self.times).PyTap(1432, 969, 0.05, 0.05)      # 点击第8个单位
-        Core(times = self.times).PyTap(610, 805, 0.05, 0.05)
+        # Core(times = self.times).PyTap(665, 965, 0.05, 0.05)       # 点击第3个单位
+        # Core(times = self.times).PyTap(600, 800, 0.05, 0.05)
+        # Core(times = self.times).PyTap(824, 971, 0.05, 0.05)       # 点击第4个单位
+        # Core(times = self.times).PyTap(400, 800, 0.05, 0.05)
+        # Core(times = self.times).PyTap(979, 963, 0.05, 0.05)       # 点击第5个单位
+        # Core(times = self.times).PyTap(660, 280, 0.05, 0.05)
+        # Core(times = self.times).PyTap(1127, 962, 0.05, 0.05)      # 点击第6个单位
+        # Core(times = self.times).PyTap(1300, 300, 0.05, 0.05)
+        # Core(times = self.times).PyTap(1282, 964, 0.05, 0.05)      # 点击第7个单位
+        # Core(times = self.times).PyTap(1305, 800, 0.05, 0.05)
+        # Core(times = self.times).PyTap(1432, 969, 0.05, 0.05)      # 点击第8个单位
+        # Core(times = self.times).PyTap(610, 805, 0.05, 0.05)
         Core(times = self.times).PyTap(280, 560, 0.05, 0.10)
         Core(times = self.times).PyTap(955, 65, 0.05, 0.05)
         Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
@@ -293,6 +293,7 @@ class AutoNightWorld():
             #循环判断是否进入二阶段还是战斗
             if not isAttackPart2:
                 if Core(times = self.times).Exist(iconName = 'time_left_before_finish_attack_2', conf = 0.6):  #判断是否存在来判断是否进入二阶段
+                    time.sleep(1)
                     self.xiabin()
                     print('[%d][%s]:等待第二阶段战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
                     isAttackPart2 = True
