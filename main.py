@@ -4,10 +4,13 @@ import uiautomator2 as u2
 import yaml
 import logging
 import re
+from typing import Optional
 from inputimeout import inputimeout, TimeoutOccurred
-from threading import Thread
-from func_timeout import func_set_timeout, FunctionTimedOut
 from paddleocr import PaddleOCR
+from windows_toasts import Toast, WindowsToaster
+from multiprocessing import Process, Queue
+
+
 
 with open('config.yml', 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
@@ -16,7 +19,8 @@ dev_addr = config['device']['host'] + ':' + config['device']['port']
 device = u2.connect(dev_addr)
 
 logging.disable(logging.DEBUG)
-ocr = PaddleOCR(use_angle_cls=True, lang='en', ppocrdebug=False)
+ocr : PaddleOCR = None
+config = None
 
 
 
@@ -56,20 +60,39 @@ class Resource:
 
 
 class Core():
-    def __init__(
-            self,
+    def __init__(self,
             times : int | None = 0,
-            isPrintLog : int | None = 0):
+            printLogFormat : int | None = 0,
+            log_queue: Optional[Queue] = None):
         self.times = times
-        self.isPrintLog = isPrintLog
+        self._printLogFormat = printLogFormat
+        self.log_queue = log_queue
         pass
 
+    def stdout(self, 
+            message : str,
+            printLogFormat : int,
+            log_queue : Optional[Queue] | None = None):
+        if printLogFormat is None:
+            printLogFormat = self._printLogFormat
+        if printLogFormat == 0:
+            pass
+        elif printLogFormat == 1:
+            print(message)
+        elif printLogFormat == 2 and log_queue:
+            log_queue.put(message)
+        pass
 
-    def GetScreen(self, isPrintLog : int | None = 0):
+    def OcrLoad(self):
+        global ocr
+        ocr = PaddleOCR(use_angle_cls=True, lang='en', ppocrdebug=False)
+        
+
+    def GetScreen(self, printLogFormat : int | None = 0):
 
         image = device.screenshot(format='opencv')
-        if isPrintLog:
-            print('[%d][%s]:get the screen' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        message = '[%d][%s]:get the screen' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+        self.stdout(message, printLogFormat, self.log_queue)
         time.sleep(1)
         return image
 
@@ -77,7 +100,7 @@ class Core():
     def GetIconPosition(self,
                         iconName : str,
                         conf : float | None = 0.9,
-                        isPrintLog : int | None = 0):
+                        printLogFormat : int | None = 0):
         if iconName is None:
             raise NameError
         icon = cv2.imread('./icon/' + iconName + '.png', cv2.IMREAD_COLOR)
@@ -100,9 +123,9 @@ class Core():
 
 
     def GetRes(self,
-               isPrintLog : int | None = 0):
-        if isPrintLog:
-            print('[%d][%s]:start get resource' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+               printLogFormat : int | None = 0) -> Resource:
+        message = '[%d][%s]:start get resource' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+        self.stdout(message, printLogFormat, self.log_queue)
         image = device.screenshot(format='opencv')
 
         goldImg = image[150:190, 90:300]
@@ -155,44 +178,42 @@ class Core():
                 darkelixir_num += d
             darkelixir_num = int(darkelixir_num)
 
-
-        if isPrintLog:
-            print('[%d][%s]:success find gold [%d], elixir [%d], darkelixir [%d]' %(self.times, time.strftime('%H:%M:%S', time.localtime()), gold, elixir, darkelixir))
-
+        # message = '[%d][%s]:success find gold [%d], elixir [%d], darkelixir [%d]' %(self.times, time.strftime('%H:%M:%S', time.localtime()), gold, elixir, darkelixir)
+        # self.stdout(message, printLogFormat)
         return Resource(gold_num, elixir_num, darkelixir_num)
 
 
     def Exist(self,
               iconName : str,
               conf : float | None = 0.9,
-              isPrintLog : int | None = 0):
-        pos = self.GetIconPosition(iconName, conf, isPrintLog)
+              printLogFormat : int | None = 0) -> bool:
+        pos = self.GetIconPosition(iconName, conf, printLogFormat)
         x = pos.x
         y = pos.y
         if x == -1 :
-            if isPrintLog:
-                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName))
+            message = '[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName)
+            self.stdout(message, printLogFormat, self.log_queue)
             return False
         else:
-            if isPrintLog:
-                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y))
+            message = '[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y)
+            self.stdout(message, printLogFormat, self.log_queue)
             return True
         
 
     def NotExist(self,
                  iconName : str,
                  conf : float | None = 0.9,
-                 isPrintLog : int | None = 0):
-        pos = self.GetIconPosition(iconName, conf, isPrintLog)
+                 printLogFormat : int | None = 0) -> bool:
+        pos = self.GetIconPosition(iconName, conf, printLogFormat)
         x = pos.x
         y = pos.y
         if x == -1 :
-            if isPrintLog:
-                print('[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName))
+            message = '[%d][%s]:The icon %s is not exist' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName)
+            self.stdout(message, printLogFormat, self.log_queue)
             return True
         else:
-            if isPrintLog:
-                print('[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y))
+            message = '[%d][%s]:Successful to find the icon at %s %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), iconName, x, y)
+            self.stdout(message, printLogFormat, self.log_queue)
             return False
 
 
@@ -201,11 +222,11 @@ class Core():
               y : int,
               before_time : float | None = 2.0,
               after_time :float | None = 2.0,
-              isPrintLog : int | None = 0):
+              printLogFormat : int | None = 0):
         time.sleep(before_time)
         device.click(x, y)
-        if isPrintLog:
-            print('[%d][%s]:Successful tap %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), x, y))
+        message = '[%d][%s]:Successful tap %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), x, y)
+        self.stdout(message, printLogFormat, self.log_queue)
         time.sleep(after_time)
 
 
@@ -215,24 +236,24 @@ class Core():
                 to_x : int,
                 to_y : int,
                 way_time : float | None = 0.5,
-                isPrintLog : int | None = 0):
+                printLogFormat : int | None = 0):
         device.swipe(from_x, from_y, to_x, to_y, way_time)
-        if isPrintLog:
-            print('[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), from_x, from_y, to_x, to_y))
+        message = '[%d][%s]:Successful swip from %d %d to %d %d' %(self.times, time.strftime('%H:%M:%S', time.localtime()), from_x, from_y, to_x, to_y)
+        self.stdout(message, printLogFormat, self.log_queue)
 
 
     def Launch(self,
-               isPrintLog : int | None = 0):
+               printLogFormat : int | None = 0):
         cur = device.app_current()
         app = cur['package']
         
         if app != 'com.supercell.clashofclans':
             device.app_start("com.supercell.clashofclans")
 
-        while self.NotExist(iconName = 'message', isPrintLog = 0):
+        while self.NotExist(iconName = 'message', printLogFormat = 0):
             pass
-        if isPrintLog:
-            print("\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime())))
+        message = "\033[0;30;47m[%s]:游戏启动完成\033[0m" %(time.strftime('%H:%M:%S', time.localtime()))
+        self.stdout(message, printLogFormat, self.log_queue)
 
 
 
@@ -265,11 +286,10 @@ class AutoNightWorld():
         Core(times = self.times).PyTap(1625, 560, 0.05, 0.05)
 
 
-    def Fight(self):
+    def Fight(self) -> None:
         Core(times = self.times).GetScreen()
         Core(times = self.times).PyTap(125, 1000, 0.5, 0.5)                                                     # 点击进攻
         isAttackCrash = False
-
         isShowLastAttackInfo = False
         while Core(times = self.times).Exist(iconName = 'time_left_before_last_attck_finished'):               # 判断上一场战斗是否完成
             if not isShowLastAttackInfo:
@@ -315,25 +335,28 @@ class AutoHomeTown():
     def __init__(self, times : int | None = 0):
         self.times = times
 
-    def xiabin(self):
-        Core(times = self.times).PyTap(350, 1000, 0.5, 0.5, 0)
+    def xiabin(self) -> None:
+        Core(times = self.times).PyTap(210, 950, 0.5, 0.5, 0)
         for i in range(14):
             Core(times = self.times).PyTap(530-35*i, 30+26*i, 0.05, 0.05, 0)
+
+        Core(times = self.times).PyTap(370, 950, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(470, 130, 0.05, 0.05, 0)
         
-        Core(times = self.times).PyTap(480, 1000, 0.05, 0.05, 0)
-        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(530, 950, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(470, 130, 0.05, 0.05, 0)
 
-        Core(times = self.times).PyTap(620, 1000, 0.05, 0.05, 0)
-        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(670, 950, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(470, 130, 0.05, 0.05, 0)
 
-        Core(times = self.times).PyTap(740, 1000, 0.05, 0.05, 0)
-        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(790, 950, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(470, 130, 0.05, 0.05, 0)
 
-        Core(times = self.times).PyTap(860, 1000, 0.05, 0.05, 0)
-        Core(times = self.times).PyTap(200, 780, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(910, 950, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(470, 130, 0.05, 0.05, 0)
 
         #选择地震法术并施放
-        Core(times = self.times).PyTap(1000, 1000, 0.05, 0.05, 0)
+        Core(times = self.times).PyTap(1130, 950, 0.05, 0.05, 0)
 
         Core(times = self.times).PyTap(720, 320, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(720, 500, 0.05, 0.05, 0)
@@ -349,73 +372,178 @@ class AutoHomeTown():
         Core(times = self.times).PyTap(1280, 500, 0.05, 0.05, 0)
         Core(times = self.times).PyTap(1280, 680, 0.05, 0.05, 0)
 
-    def Fight(self):
+    def Hand(self,
+              pritLogFormat : int | None = 1):
         Core(times = self.times).PyTap(125, 1000, 0.5, 0.5, 0)
         Core(times = self.times).PyTap(1400, 700, 0.5, 0.5, 0)
         while True:
-            print('[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
-            while Core(times = self.times).NotExist(iconName = 'finish_attack', isPrintLog = 0):
+            message = '[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+            Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
+            while Core(times = self.times).NotExist(iconName = 'finish_attack', printLogFormat = 0):
                 pass
-            print('[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+            message = '[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+            Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
             time.sleep(1)
             resource = Core(times = self.times).GetRes()
-            if resource.totle < 2000000:
-                print('[%d][%s]:目标资源仅有 %d , 下一个' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.gold))    
+            if resource.totle < 2500000:
+                message = '[%d][%s]:目标资源仅有 %d , 下一个' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.totle)
+                Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
+                Core(times = self.times).PyTap(1800, 800, 0.5, 0.5, 0)
+            else:
+                break
+        toaster = WindowsToaster('AutoCOC')
+        newToasts = Toast()
+        newToasts.text_fields = ['成功寻敌']
+        toaster.show_toast(newToasts)
+        message = '[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+        Core(times = self.times).stdout(message, 1)
+        while Core(times = self.times).NotExist(iconName = 'back_home', conf = 0.9, printLogFormat = 0):
+            pass
+        message = '[%d][%s]:战斗结束,回城' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+        Core(times = self.times).PyTap(950, 930, 0.05, 0.05, 0)
+        while Core(times = self.times).NotExist(iconName = 'message', conf = 0.9, printLogFormat = 0):
+            pass
+
+    def Fight(self,
+              pritLogFormat : int | None = 1):
+        Core(times = self.times).PyTap(125, 1000, 0.5, 0.5, 0)
+        Core(times = self.times).PyTap(1400, 700, 0.5, 0.5, 0)
+        while True:
+            message = '[%d][%s]:开始寻敌' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+            Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
+            while Core(times = self.times).NotExist(iconName = 'finish_attack', printLogFormat = 0):
+                pass
+            message = '[%d][%s]:寻敌完成' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+            Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
+            time.sleep(1)
+            resource = Core(times = self.times).GetRes()
+            if resource.totle < 2500000:
+                message = '[%d][%s]:目标资源仅有 %d , 下一个' %(self.times, time.strftime('%H:%M:%S', time.localtime()), resource.totle)
+                Core(times = self.times).stdout(message, printLogFormat = pritLogFormat)
                 Core(times = self.times).PyTap(1800, 800, 0.5, 0.5, 0)
             else:
                 break
         self.xiabin()
-        print('[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
-        while Core(times = self.times).NotExist(iconName = 'back_home', conf = 0.9, isPrintLog = 0):
+        # self.Hand()
+        message = '[%d][%s]:等待战斗结束' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
+        Core(times = self.times).stdout(message, 1)
+        while Core(times = self.times).NotExist(iconName = 'back_home', conf = 0.9, printLogFormat = 0):
             pass
-        print('[%d][%s]:战斗结束,回城' %(self.times, time.strftime('%H:%M:%S', time.localtime())))
+        message = '[%d][%s]:战斗结束,回城' %(self.times, time.strftime('%H:%M:%S', time.localtime()))
         Core(times = self.times).PyTap(950, 930, 0.05, 0.05, 0)
-        while Core(times = self.times).NotExist(iconName = 'message', conf = 0.9, isPrintLog = 0):
+        while Core(times = self.times).NotExist(iconName = 'message', conf = 0.9, printLogFormat = 0):
             pass
+
+
+class Run():
+    def __init__(self,
+                 choise : str | None = config['gameconfig']['lastgamemode'],
+                 play_times : int | None = config['gameconfig']['lastgameplaytimes']):
+        self.choise = choise
+        self.play_times = play_times
+        self._TerminalRun()
+    
+    def run(self,
+            choise : str | None = None,
+            play_times : int | None = None,
+            log_queue : Optional[Queue] | None = None):
+        current_times = 1
+        if choise == '1':
+            while current_times <= play_times:
+                msg_start = "[%s]:开始第 %d/%d 轮战斗" %(time.strftime('%H:%M:%S', time.localtime()), current_times, play_times)
+                if log_queue:
+                    log_queue.put(msg_start)
+                else:
+                    print("\033[0;30;47m%s\033[0m" %(msg_start))
+                AutoHomeTown(current_times).Fight()
+                msg_end = "[%s]:第 %d/%d 轮战斗结束" %(time.strftime('%H:%M:%S', time.localtime()), current_times, play_times)
+                if log_queue:
+                    log_queue.put(msg_end)
+                else:
+                    print("\033[0;30;47m%s\033[0m" %(msg_end))
+                current_times += 1
+        elif choise == '2':
+            while current_times <= play_times:
+                msg_start = "[%s]:开始第 %d/%d 轮战斗" %(time.strftime('%H:%M:%S', time.localtime()), current_times, play_times)
+                if log_queue:
+                    log_queue.put(msg_start)
+                else:
+                    print("\033[0;30;47m%s\033[0m" %(msg_start))
+                AutoNightWorld(current_times).Fight()
+                msg_end = "[%s]:第 %d/%d 轮战斗结束" %(time.strftime('%H:%M:%S', time.localtime()), current_times, play_times)
+                if log_queue:
+                    log_queue.put(msg_end)
+                else:
+                    print("\033[0;30;47m%s\033[0m" %(msg_end))
+                current_times += 1
+        else:
+            if log_queue:
+                log_queue.put(str(choise) + ':' + choise)
+                log_queue.put('已退出\n')
+            else:
+                print(str(choise) + ':' + choise)
+                print('已退出\n')
+            exit()
+    
+
+    def _TerminalRun(self):
+        global config
+        with open('config.yml', 'r', encoding='utf-8') as file:
+            config = yaml.safe_load(file)
+
+        launchprocess = Process(target=Core().Launch())
+        launchprocess.start()
+        loadprocess = Process(target=Core().OcrLoad())
+        loadprocess.start()
+
+        try:
+            choise = inputimeout(prompt='1.自动家乡作战\n2.自动夜世界作战\n3.退出\n默认值: %s\n' %(config['gameconfig']['lastgamemode']), timeout=5)
+            config['gameconfig']['lastgamemode'] = choise
+            with open('config.yml', 'w', encoding='utf-8') as file:
+                yaml.safe_dump(config, file, allow_unicode=True)
+        except TimeoutOccurred:
+            choise = config['gameconfig']['lastgamemode']
+            message = '输入超时，已使用默认值 {}'.format(choise)
+            Core().stdout(message, 1)
+        except ValueError:
+            choise = config['gameconfig']['lastgamemode']
+            message = '输入错误，已使用默认值 {}'.format(choise)
+            Core().stdout(message, 1)
+
+        try:
+            play_times : str = inputimeout(prompt='请输入战斗次数，默认值: %s\n' %(config['gameconfig']['lastgameplaytimes']), timeout=5)
+            play_times : int = int(play_times)
+            config['gameconfig']['lastgameplaytimes'] = int(play_times)
+            with open('config.yml', 'w', encoding='utf-8') as file:
+                yaml.safe_dump(config, file, allow_unicode=True)
+        except TimeoutOccurred:
+            play_times : int = config['gameconfig']['lastgameplaytimes']
+            play_times : int = int(play_times)
+            message = '输入超时，已使用默认值 {}'.format(play_times)
+            Core().stdout(message, 1)
+        except ValueError:
+            play_times : int = config['gameconfig']['lastgameplaytimes']
+            play_times : int = int(play_times)
+            message = '输入错误，已使用默认值 {}'.format(play_times)
+            Core().stdout(message, 1)
+        launchprocess.join()
+        loadprocess.join()
+        self.run(choise, play_times)
+        pass
+
+    def _GUIRun(self,
+                choise : str | None = None,
+                play_times : int | None = None,
+                log_queue : Optional[Queue] | None = None):
+        launchprocess = Process(target=Core().Launch())
+        launchprocess.start()
+        loadprocess = Process(target=Core().OcrLoad())
+        loadprocess.start()
+        launchprocess.join()
+        loadprocess.join()
+        self.run(choise, play_times, log_queue)
+        pass
 
 
 if __name__ == '__main__':
-    launchthread = Thread(target=Core().Launch())
-    launchthread.start()
-
-    try:
-        choise = inputimeout(prompt='1.自动家乡作战\n2.自动夜世界作战\n3.退出\n5秒内输入(默认值为夜世界):', timeout=5)
-    except TimeoutOccurred:
-        choise = config['gameconfig']['gamemode']
-
-    try:
-        play_times = inputimeout(prompt='请输入战斗次数\n', timeout=5)
-        if play_times is None:
-            play_times = config['gameconfig']['gameplaytimes']
-        else:
-            play_times = int(play_times)
-    except TimeoutOccurred:
-        play_times = config['gameconfig']['gameplaytimes']
-    except ValueError:
-        pass
-    
-    if launchthread.is_alive():
-        launchthread.join()
-
-    current_times = 1
-    if choise == '1':
-        while current_times <= play_times:
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now, current_times))
-            # exit()
-            AutoHomeTown(current_times).Fight()
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, current_times))
-            current_times += 1
-    elif choise == '2' or choise == None:
-        Core().Launch()
-        while current_times <= play_times:
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:开始第 %d 轮战斗\033[0m" %(time_now, current_times))
-            AutoNightWorld(current_times).Fight()
-            time_now = time.strftime('%H:%M:%S', time.localtime())
-            print("\033[0;30;47m[%s]:第 %d 轮战斗结束\033[0m" %(time_now, current_times))
-            current_times += 1
-    elif choise == '3':
-        print('已退出\n')
-        exit()
+    Run()._TerminalRun()
